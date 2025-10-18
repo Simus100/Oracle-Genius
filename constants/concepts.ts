@@ -5,29 +5,59 @@ export const conceptMap: Record<string, Set<string>> = {
     // --- Concetti Situazionali / Negativi ---
     BLOCKAGE: new Set(['blocco', 'bloccato', 'ostacolo', 'impedimento', 'ristagno', 'paralisi', 'difficoltà', 'insormontabile', 'stasi', 'fermo', 'immobile', 'prigione', 'intrappolato']),
     CHAOS: new Set(['caos', 'confusione', 'disordine', 'dispersione', 'erratico', 'frammentazione', 'disorganizzazione', 'incertezza']),
-    FEAR: new Set(['paura', 'ansia', 'timore', 'panico', 'preoccupazione', 'insicurezza', 'terrore', 'angoscia', 'agitazione']),
+    FEAR: new Set(['paura', 'ansia', 'timore', 'panico', 'preoccupazione', 'insicurezza', 'terrore', 'angoscia', 'agitazione', 'dubbio']),
     WEAKNESS: new Set(['debolezza', 'vulnerabilità', 'fragilità', 'inerzia', 'passività', 'sottomissione', 'indecisione', 'esitazione', 'cedimento']),
     CONFLICT: new Set(['conflitto', 'lotta', 'disputa', 'battaglia', 'scontro', 'tensione', 'divisione', 'contrapposizione', 'ostilità', 'guerra', 'rabbia']),
     LOSS: new Set(['perdita', 'fallimento', 'sconfitta', 'declino', 'decadimento', 'sgretolamento', 'rovina', 'danno', 'fine']),
-    PAIN: new Set(['dolore', 'sofferenza', 'frustrazione', 'tristezza', 'oppressione', 'disagio', 'fatica', 'esaurimento', 'pena', 'lamento']),
+    PAIN: new Set(['dolore', 'sofferenza', 'frustrazione', 'tristezza', 'oppressione', 'disagio', 'fatica', 'esaurimento', 'pena', 'lamento', 'vuoto']),
     ISOLATION: new Set(['isolamento', 'solitudine', 'separazione', 'esclusione', 'distacco', 'estraneo', 'incompreso']),
     ERROR: new Set(['errore', 'sbaglio', 'colpa', 'ingenuità', 'follia', 'illusione', 'superficialità', 'inganno', 'corruzione', 'disonestà', 'vizio']),
     EXCESS: new Set(['eccesso', 'esagerazione', 'prepotenza', 'arroganza', 'avidità', 'impulsività', 'spreco', 'orgoglio', 'ambizione']),
     LACK: new Set(['mancanza', 'carenza', 'vuoto', 'bisogno', 'povertà', 'assenza', 'fame', 'sete']),
 
+    // --- Contesto Specifico ---
+    CONTEXT_WORK: new Set(['lavoro', 'carriera', 'progetto', 'azienda', 'colleghi', 'ufficio']),
+    CONTEXT_RELATIONSHIP: new Set(['relazione', 'amore', 'coppia', 'partner', 'matrimonio', 'amicizia', 'legame']),
+    CONTEXT_FAMILY: new Set(['famiglia', 'genitori', 'figli', 'casa', 'radici']),
+    CONTEXT_CHOICE: new Set(['decisione', 'scelta', 'bivio', 'dubbio', 'alternativa']),
+    CONTEXT_JOURNEY: new Set(['viaggio', 'percorso', 'strada', 'sentiero', 'esplorazione', 'inizio']),
+    CONTEXT_WAITING: new Set(['attesa', 'pazienza', 'pausa', 'aspettare']),
+    CONTEXT_CHALLENGE: new Set(['sfida', 'prova', 'competizione', 'esame']),
+
     // --- Concetti di Obiettivo / Positivi ---
     STRENGTH: new Set(['forza', 'potenza', 'energia', 'vigore', 'determinazione', 'resilienza', 'coraggio', 'fermezza', 'potere']),
     WISDOM: new Set(['saggezza', 'comprensione', 'chiarezza', 'consapevolezza', 'discernimento', 'verità', 'lucidità', 'introspezione', 'conoscenza']),
     ACTION: new Set(['azione', 'decisione', 'iniziativa', 'movimento', 'progresso', 'sviluppo', 'risoluzione', 'impresa', 'fare']),
-    CONNECTION: new Set(['connessione', 'unione', 'associazione', 'solidarietà', 'alleanza', 'comunità', 'relazione', 'armonia', 'legami', 'amore', 'amicizia']),
+    CONNECTION: new Set(['connessione', 'unione', 'associazione', 'solidarietà', 'alleanza', 'comunità', 'relazione', 'armonia', 'legami', 'amore', 'amicizia', 'fiducia']),
     GUIDANCE: new Set(['guida', 'leader', 'maestro', 'esempio', 'insegnamento', 'ispirazione', 'consiglio']),
     ORDER: new Set(['ordine', 'disciplina', 'struttura', 'equilibrio', 'stabilità', 'organizzazione', 'regole', 'limiti', 'legge']),
-    GROWTH: new Set(['crescita', 'sviluppo', 'evoluzione', 'maturazione', 'apprendimento', 'rinnovamento', 'trasformazione', 'nascita', 'inizio']),
+    GROWTH: new Set(['crescita', 'sviluppo', 'evoluzione', 'maturazione', 'apprendimento', 'rinnovamento', 'trasformazione', 'nascita', 'inizio', 'realizzazione']),
     SUCCESS: new Set(['successo', 'realizzazione', 'vittoria', 'fortuna', 'prosperità', 'abbondanza', 'compimento', 'ricchezza']),
-    PEACE: new Set(['pace', 'serenità', 'calma', 'quiete', 'tranquillità', 'gioia', 'felicità', 'sollievo']),
+    PEACE: new Set(['pace', 'serenità', 'calma', 'quiete', 'tranquillità', 'gioia', 'felicità', 'sollievo', 'speranza']),
     INTEGRITY: new Set(['integrità', 'onestà', 'sincerità', 'autenticità', 'coerenza', 'rettitudine', 'virtù', 'lealtà', 'modestia', 'umiltà']),
     CARE: new Set(['cura', 'nutrimento', 'sostegno', 'protezione', 'generosità', 'servizio', 'aiuto', 'condivisione']),
+    FREEDOM: new Set(['libertà', 'liberazione', 'indipendenza', 'autonomia', 'spazio']),
 };
+
+// --- Struttura per il Dialogo Guidato Interattivo (Riorganizzata e Arricchita) ---
+export const GUIDED_QUESTIONS = [
+    {
+        title: "Definisci la Situazione Esterna",
+        description: "Qual è il contesto o l'arena in cui si svolge la tua storia?",
+        keywords: ["lavoro", "relazione", "famiglia", "progetto", "decisione", "sfida", "viaggio", "attesa", "conflitto", "caos", "declino", "inizio"]
+    },
+    {
+        title: "Descrivi il tuo Stato Interiore",
+        description: "Quali sentimenti, emozioni o stati d'animo definiscono il tuo paesaggio interiore?",
+        keywords: ["confusione", "paura", "rabbia", "tristezza", "vuoto", "blocco", "ansia", "dolore", "speranza", "gioia", "coraggio", "insicurezza"]
+    },
+    {
+        title: "Illumina la tua Intenzione e Scopo",
+        description: "A quale qualità, stato o risultato aspiri con tutto il cuore?",
+        keywords: ["chiarezza", "forza", "pace", "crescita", "saggezza", "unione", "successo", "libertà", "ordine", "amore", "realizzazione", "guida"]
+    }
+];
+
 
 // --- Struttura Dati Semantica con Ponderazione Archetipica ---
 type ConceptCategory = { primary: string[], secondary: string[] };
@@ -36,7 +66,7 @@ export const HEXAGRAM_CONCEPTS: Record<number, { situational: ConceptCategory, g
     2: { situational: { primary: ['WEAKNESS', 'LACK'], secondary: ['CHAOS', 'PASSIVITY'] }, goal: { primary: ['CARE', 'STRENGTH'], secondary: ['CONNECTION', 'PEACE'] } },
     3: { situational: { primary: ['BLOCKAGE', 'CHAOS'], secondary: ['PAIN', 'FEAR'] }, goal: { primary: ['GROWTH', 'ORDER'], secondary: ['CONNECTION', 'ACTION'] } },
     4: { situational: { primary: ['ERROR', 'CHAOS'], secondary: ['WEAKNESS', 'LACK'] }, goal: { primary: ['WISDOM', 'GROWTH'], secondary: ['GUIDANCE', 'INTEGRITY'] } },
-    5: { situational: { primary: ['BLOCKAGE', 'FEAR'], secondary: ['PAIN', 'WEAKNESS'] }, goal: { primary: ['PEACE', 'STRENGTH'], secondary: ['WISDOM', 'CARE'] } },
+    5: { situational: { primary: ['BLOCKAGE', 'FEAR', 'CONTEXT_WAITING'], secondary: ['PAIN', 'WEAKNESS'] }, goal: { primary: ['PEACE', 'STRENGTH'], secondary: ['WISDOM', 'CARE'] } },
     6: { situational: { primary: ['CONFLICT', 'EXCESS'], secondary: ['PAIN', 'BLOCKAGE'] }, goal: { primary: ['PEACE', 'WISDOM'], secondary: ['ORDER', 'INTEGRITY'] } },
     7: { situational: { primary: ['CHAOS', 'CONFLICT'], secondary: ['LACK', 'WEAKNESS'] }, goal: { primary: ['ORDER', 'STRENGTH'], secondary: ['GUIDANCE', 'ACTION'] } },
     8: { situational: { primary: ['ISOLATION', 'WEAKNESS'], secondary: ['FEAR', 'LACK'] }, goal: { primary: ['CONNECTION', 'STRENGTH'], secondary: ['GUIDANCE', 'INTEGRITY'] } },
@@ -44,12 +74,12 @@ export const HEXAGRAM_CONCEPTS: Record<number, { situational: ConceptCategory, g
     10: { situational: { primary: ['FEAR', 'BLOCKAGE'], secondary: ['WEAKNESS', 'EXCESS'] }, goal: { primary: ['INTEGRITY', 'ACTION'], secondary: ['WISDOM', 'STRENGTH'] } },
     11: { situational: { primary: ['PEACE', 'WEAKNESS'], secondary: ['BLOCKAGE', 'EXCESS'] }, goal: { primary: ['SUCCESS', 'CONNECTION'], secondary: ['PEACE', 'WISDOM'] } },
     12: { situational: { primary: ['BLOCKAGE', 'ISOLATION'], secondary: ['PAIN', 'LOSS'] }, goal: { primary: ['INTEGRITY', 'WISDOM'], secondary: ['PEACE', 'STRENGTH'] } },
-    13: { situational: { primary: ['ISOLATION', 'CONFLICT'], secondary: ['ERROR', 'FEAR'] }, goal: { primary: ['CONNECTION', 'INTEGRITY'], secondary: ['ORDER', 'PEACE'] } },
+    13: { situational: { primary: ['ISOLATION', 'CONFLICT', 'CONTEXT_RELATIONSHIP'], secondary: ['ERROR', 'FEAR'] }, goal: { primary: ['CONNECTION', 'INTEGRITY'], secondary: ['ORDER', 'PEACE'] } },
     14: { situational: { primary: ['SUCCESS', 'EXCESS'], secondary: ['ISOLATION', 'ERROR'] }, goal: { primary: ['CARE', 'WISDOM'], secondary: ['SUCCESS', 'ORDER'] } },
     15: { situational: { primary: ['EXCESS', 'ERROR'], secondary: ['WEAKNESS', 'LACK'] }, goal: { primary: ['INTEGRITY', 'STRENGTH'], secondary: ['WISDOM', 'SUCCESS'] } },
     16: { situational: { primary: ['EXCESS', 'ERROR'], secondary: ['CHAOS', 'LACK'] }, goal: { primary: ['GUIDANCE', 'ACTION'], secondary: ['PEACE', 'CONNECTION'] } },
     17: { situational: { primary: ['ERROR', 'WEAKNESS'], secondary: ['LACK', 'CHAOS'] }, goal: { primary: ['WISDOM', 'GUIDANCE'], secondary: ['ACTION', 'INTEGRITY'] } },
-    18: { situational: { primary: ['ERROR', 'LOSS'], secondary: ['WEAKNESS', 'BLOCKAGE'] }, goal: { primary: ['ACTION', 'ORDER'], secondary: ['GROWTH', 'WISDOM'] } },
+    18: { situational: { primary: ['ERROR', 'LOSS', 'CONTEXT_FAMILY'], secondary: ['WEAKNESS', 'BLOCKAGE'] }, goal: { primary: ['ACTION', 'ORDER'], secondary: ['GROWTH', 'WISDOM'] } },
     19: { situational: { primary: ['ACTION', 'LACK'], secondary: ['ERROR', 'WEAKNESS'] }, goal: { primary: ['GUIDANCE', 'CARE'], secondary: ['WISDOM', 'SUCCESS'] } },
     20: { situational: { primary: ['ISOLATION', 'LACK'], secondary: ['ERROR', 'WEAKNESS'] }, goal: { primary: ['WISDOM', 'INTEGRITY'], secondary: ['GUIDANCE', 'PEACE'] } },
     21: { situational: { primary: ['BLOCKAGE', 'CONFLICT'], secondary: ['FEAR', 'ERROR'] }, goal: { primary: ['ACTION', 'ORDER'], secondary: ['STRENGTH', 'WISDOM'] } },
@@ -68,10 +98,10 @@ export const HEXAGRAM_CONCEPTS: Record<number, { situational: ConceptCategory, g
     34: { situational: { primary: ['EXCESS', 'STRENGTH'], secondary: ['CONFLICT', 'ERROR'] }, goal: { primary: ['STRENGTH', 'WISDOM'], secondary: ['ORDER', 'ACTION'] } },
     35: { situational: { primary: ['ACTION', 'BLOCKAGE'], secondary: ['PAIN', 'EXCESS'] }, goal: { primary: ['SUCCESS', 'GROWTH'], secondary: ['GUIDANCE', 'CONNECTION'] } },
     36: { situational: { primary: ['PAIN', 'FEAR'], secondary: ['LOSS', 'WEAKNESS'] }, goal: { primary: ['INTEGRITY', 'WISDOM'], secondary: ['STRENGTH', 'PEACE'] } },
-    37: { situational: { primary: ['CHAOS', 'CONFLICT'], secondary: ['LACK', 'ERROR'] }, goal: { primary: ['ORDER', 'CONNECTION'], secondary: ['CARE', 'GUIDANCE'] } },
+    37: { situational: { primary: ['CHAOS', 'CONFLICT', 'CONTEXT_FAMILY'], secondary: ['LACK', 'ERROR'] }, goal: { primary: ['ORDER', 'CONNECTION'], secondary: ['CARE', 'GUIDANCE'] } },
     38: { situational: { primary: ['CONFLICT', 'ISOLATION'], secondary: ['ERROR', 'PAIN'] }, goal: { primary: ['CONNECTION', 'WISDOM'], secondary: ['PEACE', 'GROWTH'] } },
     39: { situational: { primary: ['BLOCKAGE', 'PAIN'], secondary: ['FEAR', 'ISOLATION'] }, goal: { primary: ['WISDOM', 'CONNECTION'], secondary: ['PEACE', 'ACTION'] } },
-    40: { situational: { primary: ['BLOCKAGE', 'PAIN'], secondary: ['FEAR', 'CHAOS'] }, goal: { primary: ['ACTION', 'PEACE'], secondary: ['SUCCESS', 'ORDER'] } },
+    40: { situational: { primary: ['BLOCKAGE', 'PAIN'], secondary: ['FEAR', 'CHAOS'] }, goal: { primary: ['ACTION', 'PEACE', 'FREEDOM'], secondary: ['SUCCESS', 'ORDER'] } },
     41: { situational: { primary: ['LACK', 'LOSS'], secondary: ['PAIN', 'WEAKNESS'] }, goal: { primary: ['WISDOM', 'STRENGTH'], secondary: ['GROWTH', 'INTEGRITY'] } },
     42: { situational: { primary: ['ACTION', 'LACK'], secondary: ['EXCESS', 'ERROR'] }, goal: { primary: ['SUCCESS', 'CARE'], secondary: ['CONNECTION', 'GROWTH'] } },
     43: { situational: { primary: ['BLOCKAGE', 'CONFLICT'], secondary: ['FEAR', 'EXCESS'] }, goal: { primary: ['ACTION', 'STRENGTH'], secondary: ['ORDER', 'WISDOM'] } },
@@ -84,13 +114,13 @@ export const HEXAGRAM_CONCEPTS: Record<number, { situational: ConceptCategory, g
     50: { situational: { primary: ['LACK', 'ERROR'], secondary: ['WEAKNESS', 'BLOCKAGE'] }, goal: { primary: ['SUCCESS', 'CARE'], secondary: ['GUIDANCE', 'GROWTH'] } },
     51: { situational: { primary: ['FEAR', 'CHAOS'], secondary: ['PAIN', 'LOSS'] }, goal: { primary: ['WISDOM', 'STRENGTH'], secondary: ['ORDER', 'GROWTH'] } },
     52: { situational: { primary: ['BLOCKAGE', 'PAIN'], secondary: ['FEAR', 'ISOLATION'] }, goal: { primary: ['PEACE', 'WISDOM'], secondary: ['STRENGTH', 'ORDER'] } },
-    53: { situational: { primary: ['ACTION', 'CHAOS'], secondary: ['EXCESS', 'FEAR'] }, goal: { primary: ['GROWTH', 'PEACE'], secondary: ['ORDER', 'SUCCESS'] } },
-    54: { situational: { primary: ['LACK', 'WEAKNESS'], secondary: ['ERROR', 'PAIN'] }, goal: { primary: ['INTEGRITY', 'WISDOM'], secondary: ['STRENGTH', 'PEACE'] } },
+    53: { situational: { primary: ['ACTION', 'CHAOS', 'CONTEXT_JOURNEY'], secondary: ['EXCESS', 'FEAR'] }, goal: { primary: ['GROWTH', 'PEACE'], secondary: ['ORDER', 'SUCCESS'] } },
+    54: { situational: { primary: ['LACK', 'WEAKNESS', 'CONTEXT_RELATIONSHIP'], secondary: ['ERROR', 'PAIN'] }, goal: { primary: ['INTEGRITY', 'WISDOM'], secondary: ['STRENGTH', 'PEACE'] } },
     55: { situational: { primary: ['SUCCESS', 'EXCESS'], secondary: ['ISOLATION', 'BLOCKAGE'] }, goal: { primary: ['ACTION', 'GUIDANCE'], secondary: ['WISDOM', 'SUCCESS'] } },
-    56: { situational: { primary: ['ISOLATION', 'FEAR'], secondary: ['LACK', 'PAIN'] }, goal: { primary: ['INTEGRITY', 'WISDOM'], secondary: ['PEACE', 'STRENGTH'] } },
+    56: { situational: { primary: ['ISOLATION', 'FEAR', 'CONTEXT_JOURNEY'], secondary: ['LACK', 'PAIN'] }, goal: { primary: ['INTEGRITY', 'WISDOM'], secondary: ['PEACE', 'STRENGTH'] } },
     57: { situational: { primary: ['WEAKNESS', 'FEAR'], secondary: ['LACK', 'CHAOS'] }, goal: { primary: ['ACTION', 'STRENGTH'], secondary: ['WISDOM', 'INTEGRITY'] } },
     58: { situational: { primary: ['PEACE', 'LACK'], secondary: ['ERROR', 'WEAKNESS'] }, goal: { primary: ['PEACE', 'CONNECTION'], secondary: ['INTEGRITY', 'WISDOM'] } },
-    59: { situational: { primary: ['ISOLATION', 'CHAOS'], secondary: ['LOSS', 'FEAR'] }, goal: { primary: ['CONNECTION', 'ORDER'], secondary: ['ACTION', 'GUIDANCE'] } },
+    59: { situational: { primary: ['ISOLATION', 'CHAOS'], secondary: ['LOSS', 'FEAR'] }, goal: { primary: ['CONNECTION', 'ORDER', 'FREEDOM'], secondary: ['ACTION', 'GUIDANCE'] } },
     60: { situational: { primary: ['BLOCKAGE', 'LACK'], secondary: ['EXCESS', 'PAIN'] }, goal: { primary: ['ORDER', 'WISDOM'], secondary: ['PEACE', 'SUCCESS'] } },
     61: { situational: { primary: ['LACK', 'WEAKNESS'], secondary: ['CHAOS', 'FEAR'] }, goal: { primary: ['INTEGRITY', 'CONNECTION'], secondary: ['WISDOM', 'STRENGTH'] } },
     62: { situational: { primary: ['FEAR', 'WEAKNESS'], secondary: ['LACK', 'ERROR'] }, goal: { primary: ['WISDOM', 'INTEGRITY'], secondary: ['PEACE', 'ORDER'] } },

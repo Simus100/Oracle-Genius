@@ -1,34 +1,39 @@
 import type { Hexagram } from '../types';
 import { HEXAGRAM_CONCEPTS, conceptMap } from '../constants/concepts';
 
-// Lista ampliata di stop-words comuni in italiano per migliorare la pulizia del testo.
-const stopWords = new Set([
-  'e', 'la', 'il', 'un', 'una', 'di', 'a', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra', 'ma', 'anche', 'se', 'o',
-  'che', 'non', 'mi', 'ti', 'si', 'ci', 'vi', 'io', 'tu', 'lui', 'lei', 'noi', 'voi', 'loro',
-  'sono', 'ho', 'ha', 'abbiamo', 'avete', 'hanno', 'essere', 'avere', 'era', 'ero', 'eravamo',
-  'questo', 'quello', 'come', 'dove', 'quando', 'perché', 'mio', 'tuo', 'suo', 'mia', 'tua', 'sua',
-  'dal', 'del', 'della', 'dei', 'degli', 'delle', 'al', 'allo', 'alla', 'ai', 'agli', 'alle',
-  'nel', 'nello', 'nella', 'nei', 'negli', 'nelle', 'col', 'coi', 'sul', 'sulla', 'sui', 'sugli',
-  'cosa', 'le', 'gli', 'i', 'lo', 'ed', 'ad'
-]);
-
+// Funzione di normalizzazione del testo. Ora si limita a pulire e tokenizzare,
+// preservando parole come "non" che sono cruciali per il contesto.
 const normalizeText = (text: string): string[] => {
   return text
     .toLowerCase()
     .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"")
     .split(/\s+/)
-    .filter(word => word.length > 2 && !stopWords.has(word));
+    .filter(word => word.length > 0);
 };
 
 // --- Motore di Attribuzione Semantica di Livello Superiore ---
 
+// Per efficienza, creiamo una mappa inversa da parola chiave a concetto una sola volta.
+const keywordToConceptMap = new Map<string, string>();
+for (const [concept, keywords] of Object.entries(conceptMap)) {
+    keywords.forEach(keyword => {
+        keywordToConceptMap.set(keyword, concept);
+    });
+}
+
+// **Innovazione: Rilevamento delle Negazioni**
+// La funzione ora analizza il contesto per evitare di attivare concetti negati.
 const getUserConcepts = (userWords: string[]): Set<string> => {
     const activatedConcepts = new Set<string>();
-    const userWordsSet = new Set(userWords);
+    const negationWords = new Set(['non', 'senza', 'mai', 'nessuna', 'nessun', 'niente']);
 
-    userWordsSet.forEach(word => {
-        for (const [concept, keywords] of Object.entries(conceptMap)) {
-            if (keywords.has(word)) {
+    userWords.forEach((word, index) => {
+        if (keywordToConceptMap.has(word)) {
+            const concept = keywordToConceptMap.get(word)!;
+            const previousWord = userWords[index - 1];
+
+            // Attiva il concetto solo se la parola precedente NON è una negazione.
+            if (!previousWord || !negationWords.has(previousWord)) {
                 activatedConcepts.add(concept);
             }
         }

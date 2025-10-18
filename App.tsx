@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Hexagram } from './types';
 import { HEXAGRAMS } from './constants/hexagrams';
+import { GUIDED_QUESTIONS } from './constants/concepts';
 import { getSuggestions } from './services/semanticService';
 import InfoDisplay from './components/InfoDisplay';
 import HexagramVisual from './components/HexagramVisual';
@@ -168,6 +169,7 @@ const SuggestionCard: React.FC<{
 const App: React.FC = () => {
   const [view, setView] = useState<'INPUT' | 'SUGGESTION' | 'INTERPRETATION'>('INPUT');
   const [userInput, setUserInput] = useState<string>('');
+  const [selectedKeywords, setSelectedKeywords] = useState(new Set<string>());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [suggestedStart, setSuggestedStart] = useState<Hexagram[]>([]);
   const [suggestedGoal, setSuggestedGoal] = useState<Hexagram[]>([]);
@@ -176,22 +178,41 @@ const App: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [showInfo, setShowInfo] = useState(false);
 
+  const handleKeywordClick = (keyword: string) => {
+    setSelectedKeywords(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(keyword)) {
+        newSet.delete(keyword);
+      } else {
+        newSet.add(keyword);
+      }
+      return newSet;
+    });
+  };
+
   const handleAnalyze = () => {
-    if (userInput.trim().length < 20) {
-      setError('Per favore, descrivi la tua situazione con un po\' più di dettaglio per permettere un\'analisi profonda.');
+    if (userInput.trim().length < 10 && selectedKeywords.size < 2) { 
+      setError('Per favore, descrivi la tua situazione o seleziona almeno un paio di parole-archetipo per permettere un\'analisi profonda.');
       return;
     }
     setIsLoading(true);
     setError('');
     
+    // Unisci il testo libero e le parole chiave selezionate per l'analisi
+    const combinedInput = [userInput, ...Array.from(selectedKeywords)].join(' ');
+
     // Simulate a brief analysis period for better UX
     setTimeout(() => {
-      const suggestions = getSuggestions(userInput, HEXAGRAMS);
+      const suggestions = getSuggestions(combinedInput, HEXAGRAMS);
       
-      if (suggestions.start.length === 0 || suggestions.goal.length === 0) {
-        setError("L'Oracolo non ha trovato una risonanza chiara con le tue parole. Prova a descrivere la tua situazione con termini diversi o con maggiore dettaglio, concentrandoti sulle sensazioni e sugli obiettivi.");
+      if (suggestions.start.length === 0 && suggestions.goal.length === 0) {
+        setError("L'Oracolo non ha trovato una risonanza chiara. Prova a usare più parole-archetipo o a descrivere la situazione con maggiore dettaglio, concentrandoti sulle sensazioni e sugli obiettivi.");
         setIsLoading(false);
         return;
+      }
+       if (suggestions.start.length === 0 || suggestions.goal.length === 0) {
+        setError("L'Oracolo ha trovato una risonanza solo parziale. Prova a descrivere meglio la parte mancante (la situazione o l'obiettivo) per ottenere una guida completa.");
+        // Non blocco la vista, permetto di vedere i risultati parziali
       }
 
       setSuggestedStart(suggestions.start);
@@ -212,6 +233,7 @@ const App: React.FC = () => {
 
   const handleReset = () => {
     setUserInput('');
+    setSelectedKeywords(new Set());
     setSuggestedStart([]);
     setSuggestedGoal([]);
     setStartHexagram(null);
@@ -219,12 +241,6 @@ const App: React.FC = () => {
     setError('');
     setView('INPUT');
   };
-  
-  const placeholderText = `Descrivi il tuo percorso...
-- Qual è la tua situazione iniziale?
-- Quali sono le emozioni negative che vuoi cambiare?
-- Quali sono le tue sensazioni che vuoi migliorare?
-- Qual è il tuo obiettivo?`;
 
   return (
     <>
@@ -240,16 +256,51 @@ const App: React.FC = () => {
                     Cos'è l'Oracolo?
                 </button>
               </header>
-              <main className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-2xl shadow-black/30 p-6 md:p-10 border border-slate-700">
-                <h2 className="text-3xl text-slate-300 mb-6 text-center">Interroga l'Oracolo.</h2>
-                <textarea
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  placeholder={placeholderText}
-                  className="w-full h-64 bg-slate-800 border border-slate-600 rounded-lg p-4 text-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:text-slate-500"
-                />
+              <main className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-2xl shadow-black/30 p-6 md:p-10 border border-slate-700 space-y-10">
+                  
+                  {/* Passo 1: Scrittura libera */}
+                  <div>
+                      <h2 className="text-3xl text-slate-300 mb-2">Passo 1: Racconta la tua storia all'Oracolo</h2>
+                      <p className="text-slate-400 mb-4">Descrivi liberamente la tua situazione, le tue emozioni e i tuoi desideri. Più il tuo racconto è sincero, più la risposta sarà profonda.</p>
+                      <textarea
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder="Inizia a scrivere qui..."
+                        className="w-full min-h-[200px] bg-slate-800 border border-slate-600 rounded-lg p-4 text-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:text-slate-500"
+                      />
+                  </div>
+
+                  {/* Passo 2: Arricchimento opzionale */}
+                  <div>
+                      <h2 className="text-3xl text-slate-300 mb-2">Passo 2 <span className="text-slate-500 text-2xl">(Opzionale)</span>: Arricchisci con gli Archetipi</h2>
+                      <p className="text-slate-400 mb-6">Seleziona le parole che risuonano di più con la tua storia per aiutare l'Oracolo a cogliere l'essenza della tua richiesta.</p>
+                      <div className="space-y-6">
+                         {GUIDED_QUESTIONS.map((q, index) => (
+                           <div key={index}>
+                               <h4 className="font-semibold text-slate-200 text-lg mb-2">{q.title}</h4>
+                               <p className="text-slate-400 text-sm mb-3">{q.description}</p>
+                               <div className="flex flex-wrap gap-2">
+                                   {q.keywords.map(kw => (
+                                     <button 
+                                       key={kw} 
+                                       onClick={() => handleKeywordClick(kw)}
+                                       className={`text-slate-300 px-3 py-1 rounded-full text-sm transition-colors ${
+                                        selectedKeywords.has(kw) 
+                                          ? 'bg-amber-600 text-white font-semibold' 
+                                          : 'bg-slate-700/80 hover:bg-slate-600'
+                                       }`}
+                                      >
+                                        {kw}
+                                      </button>
+                                   ))}
+                               </div>
+                           </div>
+                         ))}
+                      </div>
+                  </div>
+
                 {error && <div className="text-center text-red-400 bg-red-900/50 p-3 rounded-lg mt-6 text-base">{error}</div>}
-                <div className="text-center mt-6">
+                <div className="text-center mt-8">
                   <button
                     onClick={handleAnalyze}
                     disabled={isLoading}
@@ -272,7 +323,7 @@ const App: React.FC = () => {
                      <div>
                          <h2 className="text-3xl text-amber-300 mb-4 text-center">1. Punto di Partenza</h2>
                          <div className="space-y-4">
-                             {suggestedStart.map(hex => (
+                            {suggestedStart.length > 0 ? suggestedStart.map(hex => (
                                  <SuggestionCard 
                                      key={`start-${hex.number}`}
                                      hexagram={hex}
@@ -280,13 +331,13 @@ const App: React.FC = () => {
                                      onSelect={() => setStartHexagram(hex)}
                                      isSelected={startHexagram?.number === hex.number}
                                  />
-                             ))}
+                             )) : <p className="text-center text-slate-500 p-4 bg-slate-800/30 rounded-lg">Nessun archetipo di partenza trovato. Prova a descrivere meglio le tue sfide attuali.</p>}
                          </div>
                      </div>
                      <div>
                          <h2 className="text-3xl text-amber-300 mb-4 text-center">2. Potenziale da Realizzare</h2>
                          <div className="space-y-4">
-                             {suggestedGoal.map(hex => (
+                             {suggestedGoal.length > 0 ? suggestedGoal.map(hex => (
                                  <SuggestionCard 
                                      key={`goal-${hex.number}`}
                                      hexagram={hex}
@@ -294,7 +345,7 @@ const App: React.FC = () => {
                                      onSelect={() => setGoalHexagram(hex)}
                                      isSelected={goalHexagram?.number === hex.number}
                                  />
-                             ))}
+                             )) : <p className="text-center text-slate-500 p-4 bg-slate-800/30 rounded-lg">Nessun archetipo di obiettivo trovato. Prova a descrivere meglio ciò a cui aspiri.</p>}
                          </div>
                      </div>
                  </div>
