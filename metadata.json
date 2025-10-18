@@ -1,5 +1,5 @@
 {
-  "name": "Oracle ",
+  "name": "Oracle Genius",
   "description": "An application that simulates the I Ching oracle using coin casting to generate hexagrams and provides AI-powered interpretations for the readings.",
   "requestFramePermissions": []
 }
