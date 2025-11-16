@@ -1,12 +1,11 @@
+
 import React, { useState } from 'react';
 import type { Hexagram } from './types';
 import { HEXAGRAMS } from './constants/hexagrams';
-import { GUIDED_QUESTIONS } from './constants/concepts';
-import { getSuggestions } from './services/semanticService';
 import InfoDisplay from './components/InfoDisplay';
 import HexagramVisual from './components/HexagramVisual';
 
-// --- Helper Functions & Components ---
+// --- Componenti di Supporto ---
 
 const renderWithBold = (text: string) => {
   if (!text) return null;
@@ -46,7 +45,28 @@ const LineTransformationVisual: React.FC<{ fromYin: boolean }> = ({ fromYin }) =
   </div>
 );
 
-// --- Interpretation Component (Largely Unchanged) ---
+// --- Componente per l'Input di Testo ---
+const TextInputArea: React.FC<{
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder: string;
+  rows?: number;
+}> = ({ label, value, onChange, placeholder, rows = 8 }) => (
+  <div className="flex flex-col w-full">
+    <label className="mb-2 text-2xl text-amber-300">{label}</label>
+    <textarea
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      rows={rows}
+      className="bg-slate-800 border border-slate-600 rounded-lg p-4 text-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all w-full resize-y leading-relaxed"
+    />
+  </div>
+);
+
+
+// --- Componente per la Visualizzazione dell'Interpretazione ---
 const InterpretationDisplay: React.FC<{ start: Hexagram; goal: Hexagram }> = ({ start, goal }) => {
     const changingIndices: number[] = [];
     for (let i = 0; i < start.lines.length; i++) {
@@ -107,18 +127,28 @@ const InterpretationDisplay: React.FC<{ start: Hexagram; goal: Hexagram }> = ({ 
                     <div className="space-y-5">
                         {changingIndices.map(index => {
                             const fromYin = !start.lines[index];
+                            const toYang = goal.lines[index];
+                            let transformationDescription = '';
+                            if (fromYin && toYang) {
+                                transformationDescription = "Il tuo compito è trasmutare l'energia Yin (ricettività) in Yang (azione).";
+                            } else {
+                                transformationDescription = "Il tuo compito è trasmutare l'energia Yang (azione) in Yin (ricettività).";
+                            }
+
                             return (
                                 <div key={index} className="p-4 bg-black/20 rounded-lg">
                                     <div className="flex items-center justify-between mb-2">
                                         <p className="font-bold text-amber-300 text-lg">Chiave (Linea {index + 1})</p>
                                         <LineTransformationVisual fromYin={fromYin} />
                                     </div>
+                                    <p className="text-amber-400/80 italic text-sm mb-3 text-right">{transformationDescription}</p>
                                     <p className="text-slate-300 leading-relaxed text-base whitespace-pre-line border-t border-slate-700 pt-3">{start.lines_advice[index]}</p>
                                 </div>
                             );
                         })}
                     </div>
                 </div>
+
 
                 <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700 text-center flex flex-col h-full">
                     <h4 className="text-2xl font-semibold text-slate-200 mb-3">Potenziale da Realizzare</h4>
@@ -138,116 +168,95 @@ const InterpretationDisplay: React.FC<{ start: Hexagram; goal: Hexagram }> = ({ 
     );
 };
 
-// --- New Suggestion Components ---
 
-const SuggestionCard: React.FC<{
-  hexagram: Hexagram;
-  description: string;
-  onSelect: () => void;
-  isSelected: boolean;
-}> = ({ hexagram, description, onSelect, isSelected }) => (
-  <div
-    onClick={onSelect}
-    className={`bg-slate-800/50 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-      isSelected ? 'border-amber-500 scale-105 shadow-lg shadow-amber-900/50' : 'border-slate-700 hover:border-amber-500/50'
-    }`}
-  >
-    <div className="flex items-start gap-4">
-      <div className="flex-shrink-0 pt-1"><HexagramVisual lines={hexagram.lines} highlight={isSelected} /></div>
-      <div className="flex-grow">
-        <h3 className="text-lg font-semibold text-slate-200">{hexagram.number}. {hexagram.italianName}</h3>
-        <p className="text-slate-400 mt-1 text-sm leading-relaxed">
-          {renderWithBold(description)}
-        </p>
-      </div>
-    </div>
-  </div>
-);
-
-// --- App Component (Refactored) ---
-
+// --- Componente App Principale ---
 const App: React.FC = () => {
-  const [view, setView] = useState<'INPUT' | 'SUGGESTION' | 'INTERPRETATION'>('INPUT');
-  const [userInput, setUserInput] = useState<string>('');
-  const [selectedKeywords, setSelectedKeywords] = useState(new Set<string>());
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [suggestedStart, setSuggestedStart] = useState<Hexagram[]>([]);
-  const [suggestedGoal, setSuggestedGoal] = useState<Hexagram[]>([]);
   const [startHexagram, setStartHexagram] = useState<Hexagram | null>(null);
   const [goalHexagram, setGoalHexagram] = useState<Hexagram | null>(null);
+  const [currentSituation, setCurrentSituation] = useState('');
   const [error, setError] = useState<string>('');
   const [showInfo, setShowInfo] = useState(false);
+  const [showInterpretation, setShowInterpretation] = useState(false);
 
-  const handleKeywordClick = (keyword: string) => {
-    setSelectedKeywords(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(keyword)) {
-        newSet.delete(keyword);
-      } else {
-        newSet.add(keyword);
+  const findHexagramByText = (text: string): Hexagram | null => {
+      if (!text.trim()) return null;
+
+      const normalizedText = text.toLowerCase();
+      let bestMatch: Hexagram | null = null;
+      let maxScore = -1;
+
+      HEXAGRAMS.forEach(hexagram => {
+          let score = 0;
+          const keywords = hexagram.situationalKeywords;
+          
+          keywords.forEach(keyword => {
+            const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, 'g');
+            const matches = normalizedText.match(regex);
+            if (matches) {
+              score += matches.length * 2; // Diamo più peso alle parole chiave
+            }
+          });
+
+          // Aggiungiamo un punteggio per la corrispondenza tematica
+          hexagram.themes.forEach(theme => {
+            if (normalizedText.includes(theme.split('_')[0])) {
+              score += 1;
+            }
+          });
+
+          if (score > maxScore) {
+              maxScore = score;
+              bestMatch = hexagram;
+          }
+      });
+      
+      if (maxScore < 2) { // Soglia minima per una corrispondenza
+        return HEXAGRAMS[text.length % HEXAGRAMS.length];
       }
-      return newSet;
-    });
+
+      return bestMatch;
   };
 
-  const handleAnalyze = () => {
-    if (userInput.trim().length < 10 && selectedKeywords.size < 2) { 
-      setError('Per favore, descrivi la tua situazione o seleziona almeno un paio di parole-archetipo per permettere un\'analisi profonda.');
+  const handleConsult = () => {
+    if (!currentSituation.trim()) {
+      setError('Per favore, descrivi la tua situazione attuale.');
       return;
     }
-    setIsLoading(true);
-    setError('');
-    
-    // Unisci il testo libero e le parole chiave selezionate per l'analisi
-    const combinedInput = [userInput, ...Array.from(selectedKeywords)].join(' ');
 
-    // Simulate a brief analysis period for better UX
-    setTimeout(() => {
-      const suggestions = getSuggestions(combinedInput, HEXAGRAMS);
-      
-      if (suggestions.start.length === 0 && suggestions.goal.length === 0) {
-        setError("L'Oracolo non ha trovato una risonanza chiara. Prova a usare più parole-archetipo o a descrivere la situazione con maggiore dettaglio, concentrandoti sulle sensazioni e sugli obiettivi.");
-        setIsLoading(false);
+    const startHex = findHexagramByText(currentSituation);
+
+    if (!startHex) {
+        setError("Non è stato possibile interpretare la tua situazione. Prova a essere più descrittivo.");
         return;
-      }
-       if (suggestions.start.length === 0 || suggestions.goal.length === 0) {
-        setError("L'Oracolo ha trovato una risonanza solo parziale. Prova a descrivere meglio la parte mancante (la situazione o l'obiettivo) per ottenere una guida completa.");
-        // Non blocco la vista, permetto di vedere i risultati parziali
-      }
+    }
+    
+    const goalHex = HEXAGRAMS.find(h => h.number === startHex.resolutionNumber);
 
-      setSuggestedStart(suggestions.start);
-      setSuggestedGoal(suggestions.goal);
-      setView('SUGGESTION');
-      setIsLoading(false);
-    }, 500);
+    if (!goalHex) {
+        setError("Errore interno: impossibile determinare l'esagramma di destinazione.");
+        return;
+    }
+
+    setStartHexagram(startHex);
+    setGoalHexagram(goalHex);
+    setError('');
+    setShowInterpretation(true);
   };
-  
-  const handleShowInterpretation = () => {
-      if (!startHexagram || !goalHexagram) {
-          setError('Seleziona un archetipo sia per la partenza che per l\'obiettivo per poter procedere.');
-          return;
-      }
-      setError('');
-      setView('INTERPRETATION');
-  }
 
   const handleReset = () => {
-    setUserInput('');
-    setSelectedKeywords(new Set());
-    setSuggestedStart([]);
-    setSuggestedGoal([]);
     setStartHexagram(null);
     setGoalHexagram(null);
+    setCurrentSituation('');
     setError('');
-    setView('INPUT');
+    setShowInterpretation(false);
   };
 
   return (
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-slate-800 text-gray-200 flex flex-col items-center p-4 selection:bg-amber-500 selection:text-slate-900">
         <div className="w-full max-w-7xl mx-auto flex-grow flex flex-col justify-center">
-
-          {view === 'INPUT' && (
+          
+          {!showInterpretation ? (
             <div className="animate-fade-in">
               <header className="text-center mb-8">
                 <h1 className="text-5xl md:text-7xl font-bold text-amber-300 tracking-wider">Oracolo del Mutamento</h1>
@@ -256,115 +265,35 @@ const App: React.FC = () => {
                     Cos'è l'Oracolo?
                 </button>
               </header>
-              <main className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-2xl shadow-black/30 p-6 md:p-10 border border-slate-700 space-y-10">
-                  
-                  {/* Passo 1: Scrittura libera */}
-                  <div>
-                      <h2 className="text-3xl text-slate-300 mb-2">Passo 1: Racconta la tua storia all'Oracolo</h2>
-                      <p className="text-slate-400 mb-4">Descrivi liberamente la tua situazione, le tue emozioni e i tuoi desideri. Più il tuo racconto è sincero, più la risposta sarà profonda.</p>
-                      <textarea
-                        value={userInput}
-                        onChange={(e) => setUserInput(e.target.value)}
-                        placeholder="Inizia a scrivere qui..."
-                        className="w-full min-h-[200px] bg-slate-800 border border-slate-600 rounded-lg p-4 text-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:text-slate-500"
+              <main className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-2xl shadow-black/30 p-6 md:p-10 border border-slate-700">
+                  <h2 className="text-3xl text-slate-300 mb-8 text-center">Descrivi la tua situazione o il tuo tormento interiore.</h2>
+                  <div className="flex justify-center mb-8">
+                    <div className="w-full md:w-3/4 lg:w-2/3">
+                      <TextInputArea
+                          label="Come ti senti? Cosa sta accadendo?"
+                          value={currentSituation}
+                          onChange={(e) => setCurrentSituation(e.target.value)}
+                          placeholder="Es: Mi sento bloccato e confuso, provo tristezza e non ho una direzione..."
                       />
+                    </div>
                   </div>
-
-                  {/* Passo 2: Arricchimento opzionale */}
-                  <div>
-                      <h2 className="text-3xl text-slate-300 mb-2">Passo 2 <span className="text-slate-500 text-2xl">(Opzionale)</span>: Arricchisci con gli Archetipi</h2>
-                      <p className="text-slate-400 mb-6">Seleziona le parole che risuonano di più con la tua storia per aiutare l'Oracolo a cogliere l'essenza della tua richiesta.</p>
-                      <div className="space-y-6">
-                         {GUIDED_QUESTIONS.map((q, index) => (
-                           <div key={index}>
-                               <h4 className="font-semibold text-slate-200 text-lg mb-2">{q.title}</h4>
-                               <p className="text-slate-400 text-sm mb-3">{q.description}</p>
-                               <div className="flex flex-wrap gap-2">
-                                   {q.keywords.map(kw => (
-                                     <button 
-                                       key={kw} 
-                                       onClick={() => handleKeywordClick(kw)}
-                                       className={`text-slate-300 px-3 py-1 rounded-full text-sm transition-colors ${
-                                        selectedKeywords.has(kw) 
-                                          ? 'bg-amber-600 text-white font-semibold' 
-                                          : 'bg-slate-700/80 hover:bg-slate-600'
-                                       }`}
-                                      >
-                                        {kw}
-                                      </button>
-                                   ))}
-                               </div>
-                           </div>
-                         ))}
-                      </div>
-                  </div>
-
-                {error && <div className="text-center text-red-400 bg-red-900/50 p-3 rounded-lg mt-6 text-base">{error}</div>}
-                <div className="text-center mt-8">
-                  <button
-                    onClick={handleAnalyze}
-                    disabled={isLoading}
-                    className="bg-amber-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-400/50 text-2xl disabled:bg-slate-600 disabled:cursor-not-allowed disabled:scale-100"
-                  >
-                    {isLoading ? 'Analizzando...' : 'Interpreta la mia situazione'}
-                  </button>
-                </div>
-              </main>
-            </div>
-          )}
-
-          {view === 'SUGGESTION' && (
-             <div className="animate-fade-in">
-                 <header className="text-center mb-8">
-                    <h1 className="text-5xl font-bold text-amber-300">Scegli i Tuoi Archetipi</h1>
-                    <p className="text-slate-400 mt-2 text-xl">L'Oracolo ha identificato questi percorsi. Quali risuonano di più con te?</p>
-                </header>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                     <div>
-                         <h2 className="text-3xl text-amber-300 mb-4 text-center">1. Punto di Partenza</h2>
-                         <div className="space-y-4">
-                            {suggestedStart.length > 0 ? suggestedStart.map(hex => (
-                                 <SuggestionCard 
-                                     key={`start-${hex.number}`}
-                                     hexagram={hex}
-                                     description={hex.situationalDescription}
-                                     onSelect={() => setStartHexagram(hex)}
-                                     isSelected={startHexagram?.number === hex.number}
-                                 />
-                             )) : <p className="text-center text-slate-500 p-4 bg-slate-800/30 rounded-lg">Nessun archetipo di partenza trovato. Prova a descrivere meglio le tue sfide attuali.</p>}
-                         </div>
-                     </div>
-                     <div>
-                         <h2 className="text-3xl text-amber-300 mb-4 text-center">2. Potenziale da Realizzare</h2>
-                         <div className="space-y-4">
-                             {suggestedGoal.length > 0 ? suggestedGoal.map(hex => (
-                                 <SuggestionCard 
-                                     key={`goal-${hex.number}`}
-                                     hexagram={hex}
-                                     description={hex.goalDescription}
-                                     onSelect={() => setGoalHexagram(hex)}
-                                     isSelected={goalHexagram?.number === hex.number}
-                                 />
-                             )) : <p className="text-center text-slate-500 p-4 bg-slate-800/30 rounded-lg">Nessun archetipo di obiettivo trovato. Prova a descrivere meglio ciò a cui aspiri.</p>}
-                         </div>
-                     </div>
-                 </div>
-                 {error && <div className="text-center text-red-400 bg-red-900/50 p-3 rounded-lg mt-6 text-base">{error}</div>}
-                 <div className="text-center mt-8">
+                  
+                  {error && <div className="text-center text-red-400 bg-red-900/50 p-4 rounded-lg mb-6 text-lg">{error}</div>}
+                  
+                  <div className="text-center">
                       <button
-                        onClick={handleShowInterpretation}
-                        disabled={!startHexagram || !goalHexagram}
+                        onClick={handleConsult}
+                        disabled={!currentSituation.trim()}
                         className="bg-amber-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-amber-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-amber-400/50 text-2xl disabled:bg-slate-600 disabled:cursor-not-allowed disabled:scale-100"
                       >
                         Rivela il Sentiero
                       </button>
                   </div>
-             </div>
-          )}
-          
-          {view === 'INTERPRETATION' && startHexagram && goalHexagram && (
+              </main>
+            </div>
+          ) : ( 
             <div className="animate-fade-in w-full">
-               <InterpretationDisplay start={startHexagram} goal={goalHexagram} />
+               {startHexagram && goalHexagram && <InterpretationDisplay start={startHexagram} goal={goalHexagram} />}
                <div className="text-center mt-12">
                   <button
                     onClick={handleReset}
