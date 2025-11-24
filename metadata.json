@@ -1,5 +1,5 @@
 {
-  "name": "Oracle  Genius",
-  "description": "An application that simulates the I Ching oracle using coin casting to generate hexagrams and provides AI-powered interpretations for the readings.",
+  "name": "Oracle Genius",
+  "description": "Un consulente psicologico basato sull'I Ching che utilizza un motore semantico interno per mappare le situazioni dell'utente agli esagrammi archetipici.",
   "requestFramePermissions": []
 }

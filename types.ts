@@ -5,11 +5,24 @@ export interface Hexagram {
   italianName: string;
   chineseName: string;
   lines: boolean[]; // true for solid (yang), false for broken (yin)
-  situationalDescription: string; // Descrizione dell'archetipo come sfida o condizione attuale
-  goalDescription: string; // Descrizione dell'archetipo come aspirazione o qualità da raggiungere
-  situationalKeywords: string[]; // Parole chiave per la descrizione situazionale
-  goalKeywords: string[]; // Parole chiave per la descrizione dell'obiettivo
-  lines_advice: string[]; // Array di 6 stringhe, una per ogni linea, per un consiglio mirato
-  resolutionNumber: number; // Il numero dell'esagramma che rappresenta la risoluzione
-  themes: string[]; // Categorie tematiche per una migliore associazione
+  
+  // Metadati per il Motore Semantico
+  keywords: string[]; // Parole chiave specifiche che attivano questo esagramma
+  archetype: 'CREATION' | 'RECEPTION' | 'DANGER' | 'CLARITY' | 'OBSTACLE' | 'GROWTH' | 'CONFLICT' | 'PEACE' | 'TRANSITION' | 'WAITING' | 'SUCCESS';
+  element: 'HEAVEN' | 'EARTH' | 'THUNDER' | 'WATER' | 'MOUNTAIN' | 'WIND' | 'FIRE' | 'LAKE';
+
+  // Contenuti Tradizionali e Filosofici
+  traditionalImage: string; // Es: "Il Cielo sopra, il Cielo sotto"
+  judgement: string; // La Sentenza classica rielaborata
+
+  // Descrizioni Psicologiche Estese
+  situationalDescription: string; // Analisi psicologica della situazione presente
+  goalDescription: string; // La visione dell'obiettivo evoluto
+  
+  // Approfondimenti Settoriali
+  loveAdvice: string; // Consiglio specifico per relazioni/affetti
+  workAdvice: string; // Consiglio specifico per carriera/affari
+  growthAdvice: string; // Consiglio per evoluzione spirituale/interiore
+
+  lines_advice: string[]; // 6 stringhe dettagliate per le linee mobili
 }
