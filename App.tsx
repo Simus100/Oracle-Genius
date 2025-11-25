@@ -3,7 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Hexagram } from './types';
 import HexagramVisual from './components/HexagramVisual';
 import InfoDisplay from './components/InfoDisplay';
+import BreathingExercise from './components/BreathingExercise';
 import { performSemanticAnalysis, SemanticAnalysisResult } from './utils/semanticEngine';
+import { audioManager } from './utils/audioEngine';
 
 // --- DEFINIZIONE ARCHETIPI/TAG PER L'UTENTE ---
 
@@ -236,7 +238,13 @@ const HexagramCard: React.FC<{
 
 const App: React.FC = () => {
     // State del Wizard
-    const [step, setStep] = useState<number>(1);
+    // 0 = Landing (Start Ritual)
+    // 1 = Breathing (Centering)
+    // 2 = Situation Input
+    // 3 = Goal Input
+    // 4 = Results
+    const [step, setStep] = useState<number>(0);
+    const [isMuted, setIsMuted] = useState(false);
     
     // Dati Input Utente
     const [situationText, setSituationText] = useState('');
@@ -251,6 +259,19 @@ const App: React.FC = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [showInfo, setShowInfo] = useState(false);
 
+    // Audio Control Logic
+    const toggleAudio = () => {
+        setIsMuted(!isMuted);
+        audioManager.toggleMute(!isMuted);
+    };
+
+    const startRitual = () => {
+        // Initialize audio engine on user interaction
+        audioManager.init();
+        audioManager.startDrone();
+        setStep(1); // Go to breathing
+    };
+
     // Handlers
     const toggleSituationTag = (id: string) => {
         setSituationTags(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -261,10 +282,10 @@ const App: React.FC = () => {
     };
 
     const handleNext = () => {
-        if (step === 1 && (situationText.length > 2 || situationTags.length > 0)) {
-            setStep(2);
+        if (step === 2 && (situationText.length > 2 || situationTags.length > 0)) {
+            setStep(3);
             window.scrollTo(0,0);
-        } else if (step === 2 && (goalTags.length > 0 || goalText.length > 2)) {
+        } else if (step === 3 && (goalTags.length > 0 || goalText.length > 2)) {
             analyze();
         }
     };
@@ -276,22 +297,53 @@ const App: React.FC = () => {
             const result = performSemanticAnalysis(situationText, situationTags, goalText, goalTags);
             if (result) {
                 setAnalysisResult(result);
-                setStep(3);
+                setStep(4);
                 window.scrollTo(0,0);
             }
             setIsAnalyzing(false);
-        }, 2500); // Increased delay for dramatic effect
+        }, 3000); 
     };
 
     const reset = () => {
-        setStep(1);
+        setStep(0); // Torniamo alla landing page
         setSituationText('');
         setSituationTags([]);
         setGoalText('');
         setGoalTags([]);
         setAnalysisResult(null);
+        audioManager.stop(); // Fermiamo l'audio quando si resetta
         window.scrollTo(0,0);
     };
+
+    // --- LANDING PAGE (STEP 0) ---
+    const renderLanding = () => (
+        <div className="flex flex-col items-center justify-center min-h-[70vh] animate-fade-in text-center px-4">
+            <div className="mb-10 relative">
+                <div className="absolute inset-0 bg-amber-500 blur-[80px] opacity-20 rounded-full animate-pulse"></div>
+                <div className="w-32 h-32 rounded-full border border-amber-500/30 flex items-center justify-center bg-[#0a0a0c] relative z-10 shadow-[0_0_40px_rgba(245,158,11,0.1)]">
+                    <span className="text-5xl">🔮</span>
+                </div>
+            </div>
+            
+            <h1 className="text-6xl md:text-8xl font-serif text-gold-gradient mb-6 tracking-tight">Oracle Genius</h1>
+            <p className="text-slate-400 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed mb-12">
+                Un antico specchio digitale per l'anima moderna.<br/>
+                Prima di chiedere, fermati. Prima di sapere, respira.
+            </p>
+            
+            <button 
+                onClick={startRitual}
+                className="group relative bg-transparent border border-amber-600/50 text-amber-100 hover:bg-amber-900/20 px-12 py-5 rounded-full font-medium text-lg transition-all duration-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] tracking-widest uppercase text-xs"
+            >
+                <span className="relative z-10">Inizia il Rituale</span>
+                <div className="absolute inset-0 rounded-full bg-amber-500/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </button>
+            
+            <p className="mt-8 text-xs text-slate-600 uppercase tracking-widest opacity-60">
+                Audio Consigliato per l'immersione
+            </p>
+        </div>
+    );
 
     // --- INPUT WIZARD COMMON UI ---
     const renderWizardStep = (
@@ -310,7 +362,7 @@ const App: React.FC = () => {
         <div className="animate-fade-in w-full max-w-4xl mx-auto py-10">
             <div className="text-center mb-12">
                 <div className="inline-block px-3 py-1 mb-4 rounded-full border border-white/10 bg-white/5">
-                    <span className="text-amber-500 text-[10px] font-bold uppercase tracking-[0.2em] block">Fase {step} di 2</span>
+                    <span className="text-amber-500 text-[10px] font-bold uppercase tracking-[0.2em] block">Fase {step - 1} di 2</span>
                 </div>
                 <h2 className="text-5xl md:text-6xl font-serif text-gold-gradient mb-6 leading-tight">{title}</h2>
                 <p className="text-slate-400 text-lg md:text-xl font-light leading-relaxed max-w-xl mx-auto">{subtitle}</p>
@@ -339,7 +391,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="flex justify-between items-center pt-8 border-t border-white/5">
-                {step > 1 ? (
+                {step > 2 ? (
                     <button onClick={() => setStep(step - 1)} className="text-slate-500 hover:text-slate-300 transition-colors text-xs uppercase tracking-widest font-bold px-6 py-3 flex items-center gap-2 group">
                         <span>&larr;</span> <span className="group-hover:translate-x-1 transition-transform">Indietro</span>
                     </button>
@@ -364,7 +416,7 @@ const App: React.FC = () => {
         </div>
     );
 
-    // --- RENDER STEP 3: RISULTATO ---
+    // --- RENDER STEP 4: RISULTATO ---
     const renderResult = () => {
         if (!analysisResult) return null;
         
@@ -439,6 +491,31 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
+                {/* PSYCHOMAGIC TASK SECTION - NEW POINT 3 */}
+                {startHexagram.psychomagicTask && (
+                    <div className="max-w-4xl mx-auto mt-12 mb-20 animate-fade-in">
+                        <div className="bg-[#0c0c0e] border border-indigo-900/30 p-8 rounded-2xl relative overflow-hidden group hover:border-indigo-500/40 transition-colors">
+                            <div className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-900/20 blur-[50px] rounded-full group-hover:bg-indigo-600/20 transition-all"></div>
+                            
+                            <div className="flex flex-col md:flex-row gap-8 items-center">
+                                <div className="shrink-0 w-20 h-20 rounded-full bg-[#111] border border-indigo-500/30 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.15)]">
+                                    <span className="text-3xl">✨</span>
+                                </div>
+                                <div className="flex-grow text-center md:text-left">
+                                    <h4 className="text-indigo-400 text-xs font-bold uppercase tracking-[0.3em] mb-3">Il Rituale di Azione</h4>
+                                    <h3 className="text-2xl font-serif text-slate-200 mb-4">L'Atto Psicomagico</h3>
+                                    <p className="text-slate-300 font-serif italic text-lg leading-relaxed">
+                                        "{startHexagram.psychomagicTask}"
+                                    </p>
+                                    <p className="mt-4 text-xs text-slate-500 uppercase tracking-widest font-medium">
+                                        Esegui questo compito per sbloccare l'energia
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="text-center mt-32">
                     <button 
                         onClick={reset}
@@ -463,14 +540,28 @@ const App: React.FC = () => {
                         </div>
                         <span className="font-serif text-2xl text-slate-300 tracking-wide">Oracle <span className="text-amber-600">Genius</span></span>
                     </div>
-                    <button onClick={() => setShowInfo(true)} className="text-[10px] font-bold text-slate-600 hover:text-slate-200 uppercase tracking-[0.2em] transition-colors border border-transparent hover:border-white/10 px-4 py-2 rounded-full">
-                        Info
-                    </button>
+                    
+                    <div className="flex items-center gap-4">
+                        {step > 0 && (
+                             <button onClick={toggleAudio} className="text-slate-600 hover:text-amber-400 transition-colors p-2">
+                                {isMuted ? '🔇' : '🔊'}
+                            </button>
+                        )}
+                        <button onClick={() => setShowInfo(true)} className="text-[10px] font-bold text-slate-600 hover:text-slate-200 uppercase tracking-[0.2em] transition-colors border border-transparent hover:border-white/10 px-4 py-2 rounded-full">
+                            Info
+                        </button>
+                    </div>
                 </nav>
 
                 <main className="container mx-auto px-4 flex flex-col items-center justify-center min-h-[85vh]">
                     
-                    {step === 1 && renderWizardStep(
+                    {step === 0 && renderLanding()}
+
+                    {step === 1 && (
+                        <BreathingExercise onComplete={() => setStep(2)} />
+                    )}
+                    
+                    {step === 2 && renderWizardStep(
                         "Lo Stato Presente",
                         "Chiudi gli occhi per un istante. Respira. Qual è l'energia che senti vibrare nella tua vita adesso? Descrivila senza giudizio.",
                         "In questo momento sento...",
@@ -484,7 +575,7 @@ const App: React.FC = () => {
                         situationText.length > 2 || situationTags.length > 0
                     )}
 
-                    {step === 2 && renderWizardStep(
+                    {step === 3 && renderWizardStep(
                         "L'Orizzonte",
                         "Se tutto fosse possibile, dove vorresti che questa energia fluisse? Qual è la trasformazione che la tua anima sta chiedendo?",
                         "Il mio cuore cerca...",
@@ -498,7 +589,7 @@ const App: React.FC = () => {
                         goalTags.length > 0 || goalText.length > 2
                     )}
 
-                    {step === 3 && renderResult()}
+                    {step === 4 && renderResult()}
 
                 </main>
 

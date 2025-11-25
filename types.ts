@@ -24,5 +24,8 @@ export interface Hexagram {
   workAdvice: string; // Consiglio specifico per carriera/affari
   growthAdvice: string; // Consiglio per evoluzione spirituale/interiore
 
+  // Livello dell'Azione (Psicomagia)
+  psychomagicTask: string; // Un compito pratico e rituale da svolgere
+
   lines_advice: string[]; // 6 stringhe dettagliate per le linee mobili
 }
