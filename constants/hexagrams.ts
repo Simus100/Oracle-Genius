@@ -7,7 +7,7 @@ const YANG = true;
 export const HEXAGRAMS: Hexagram[] = [
   {
     number: 1, name: "The Creative", italianName: "Il Creativo", chineseName: "乾 (qián)", lines: [YANG, YANG, YANG, YANG, YANG, YANG],
-    keywords: ["padre", "potere", "forza", "energia", "creare", "iniziare", "leader", "comando", "testa", "decisione", "voglio", "fare", "attivo"],
+    keywords: ["padre", "potere", "forza", "energia", "creare", "iniziare", "leader", "comando", "testa", "decisione", "voglio", "fare", "attivo", "coraggio", "indipendenza", "azione"],
     archetype: 'CREATION',
     element: 'HEAVEN',
     traditionalImage: "Il Cielo sopra, il Cielo sotto. Il moto del cielo è infaticabile. Così il nobile si rende forte e instancabile.",
@@ -28,7 +28,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 2, name: "The Receptive", italianName: "Il Ricettivo", chineseName: "坤 (kūn)", lines: [YIN, YIN, YIN, YIN, YIN, YIN],
-    keywords: ["madre", "accogliere", "ascoltare", "servire", "seguire", "terra", "supporto", "calma", "femminile", "ricevere", "aiutare", "passivo"],
+    keywords: ["madre", "accogliere", "ascoltare", "servire", "seguire", "terra", "supporto", "calma", "femminile", "ricevere", "aiutare", "passivo", "semplicità", "guarigione", "pace"],
     archetype: 'RECEPTION',
     element: 'EARTH',
     traditionalImage: "La Terra sopra, la Terra sotto. La natura della terra è di accogliere e sostenere tutto ciò che vive senza preferenze.",
@@ -49,7 +49,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 3, name: "Difficulty at the Beginning", italianName: "La Difficoltà Iniziale", chineseName: "屯 (zhūn)", lines: [YANG, YIN, YIN, YIN, YANG, YIN],
-    keywords: ["inizio", "difficile", "caos", "nascita", "confusione", "germoglio", "partenza", "ostacolo", "disordine", "nuovo"],
+    keywords: ["inizio", "difficile", "caos", "nascita", "confusione", "germoglio", "partenza", "ostacolo", "disordine", "nuovo", "urgenza"],
     archetype: 'GROWTH',
     element: 'WATER',
     traditionalImage: "Nubi e Tuono: l'immagine della Difficoltà Iniziale. Così il nobile districa i fili della matassa.",
@@ -70,7 +70,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 4, name: "Youthful Folly", italianName: "La Follia Giovanile", chineseName: "蒙 (méng)", lines: [YIN, YANG, YIN, YANG, YIN, YIN],
-    keywords: ["ignoranza", "imparare", "studiare", "non so", "errore", "sbaglio", "giovane", "inesperto", "domanda", "maestro"],
+    keywords: ["ignoranza", "imparare", "studiare", "non so", "errore", "sbaglio", "giovane", "inesperto", "domanda", "maestro", "speranza", "saggezza"],
     archetype: 'GROWTH',
     element: 'MOUNTAIN',
     traditionalImage: "Una sorgente scaturisce ai piedi del monte: l'immagine della Giovinezza. Il nobile alimenta il carattere con azioni scrupolose.",
@@ -91,7 +91,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 5, name: "Waiting (Nourishment)", italianName: "L'Attesa", chineseName: "需 (xū)", lines: [YANG, YANG, YANG, YIN, YANG, YIN],
-    keywords: ["aspettare", "pazienza", "tempo", "ritardo", "calma", "nutrimento", "cibo", "mangiare", "fiducia", "domani"],
+    keywords: ["aspettare", "pazienza", "tempo", "ritardo", "calma", "nutrimento", "cibo", "mangiare", "fiducia", "domani", "speranza"],
     archetype: 'WAITING',
     element: 'WATER',
     traditionalImage: "Nubi che salgono nel cielo: l'immagine dell'Attesa. Così il nobile mangia e beve ed è lieto e di buon umore.",
@@ -112,7 +112,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 6, name: "Conflict", italianName: "Il Conflitto", chineseName: "訟 (sòng)", lines: [YIN, YANG, YIN, YANG, YANG, YANG],
-    keywords: ["lite", "guerra", "rabbia", "causa", "avvocato", "discutere", "combattere", "nemico", "contro", "diverso"],
+    keywords: ["lite", "guerra", "rabbia", "causa", "avvocato", "discutere", "combattere", "nemico", "contro", "diverso", "gelosia", "tradimento"],
     archetype: 'CONFLICT',
     element: 'HEAVEN',
     traditionalImage: "Il Cielo e l'Acqua si muovono in direzioni opposte: l'immagine del Conflitto. Così il nobile, nel fare affari, considera il principio con precisione.",
@@ -133,7 +133,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 12, name: "Standstill (Stagnation)", italianName: "Il Ristagno", chineseName: "否 (pǐ)", lines: [YIN, YIN, YIN, YANG, YANG, YANG],
-    keywords: ["blocco", "fermo", "solo", "isolato", "incompreso", "niente", "vuoto", "separazione", "stallo", "noia"],
+    keywords: ["blocco", "fermo", "solo", "isolato", "incompreso", "niente", "vuoto", "separazione", "stallo", "noia", "apatia", "solitudine"],
     archetype: 'OBSTACLE',
     element: 'HEAVEN',
     traditionalImage: "Cielo e Terra non si uniscono: l'immagine del Ristagno. Così il nobile si ritira nel suo valore interiore per sfuggire alle difficoltà.",
@@ -154,7 +154,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 29, name: "The Abysmal (Water)", italianName: "L'Abisso", chineseName: "坎 (kǎn)", lines: [YIN, YANG, YIN, YIN, YANG, YIN],
-    keywords: ["paura", "ansia", "depressione", "pericolo", "buio", "cadere", "crisi", "profondo", "lacrime", "aiuto"],
+    keywords: ["paura", "ansia", "depressione", "pericolo", "buio", "cadere", "crisi", "profondo", "lacrime", "aiuto", "colpa"],
     archetype: 'DANGER',
     element: 'WATER',
     traditionalImage: "L'Acqua scorre ininterrottamente e arriva alla meta: l'immagine dell'Abissale. Così il nobile incede in una costante virtù ed esercita l'insegnamento.",
@@ -175,7 +175,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 30, name: "The Clinging (Fire)", italianName: "Il Fuoco", chineseName: "離 (lí)", lines: [YANG, YIN, YANG, YANG, YIN, YANG],
-    keywords: ["chiarezza", "vedere", "capire", "luce", "intelligenza", "visione", "passione", "bruciare", "scoprire", "verità"],
+    keywords: ["chiarezza", "vedere", "capire", "luce", "intelligenza", "visione", "passione", "bruciare", "scoprire", "verità", "urgenza"],
     archetype: 'CLARITY',
     element: 'FIRE',
     traditionalImage: "La chiarezza sorge due volte: l'immagine del Fuoco. Così il nobile, perpetuando questa chiarezza, illumina le quattro parti del mondo.",
@@ -196,7 +196,7 @@ export const HEXAGRAMS: Hexagram[] = [
   },
   {
     number: 63, name: "After Completion", italianName: "Dopo il Compimento", chineseName: "既濟 (jì jì)", lines: [YANG, YIN, YANG, YIN, YANG, YIN],
-    keywords: ["finito", "raggiunto", "successo", "vittoria", "arrivato", "completo", "perfetto", "tutto", "massimo", "apice"],
+    keywords: ["finito", "raggiunto", "successo", "vittoria", "arrivato", "completo", "perfetto", "tutto", "massimo", "apice", "equilibrio"],
     archetype: 'SUCCESS',
     element: 'WATER',
     traditionalImage: "L'Acqua sta sopra il Fuoco: l'immagine del Dopo il Compimento. Così il nobile pondera la disgrazia e se ne premunisce a tempo.",

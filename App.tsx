@@ -15,30 +15,44 @@ interface TagOption {
 
 const SITUATION_TAGS: TagOption[] = [
     { id: 'confusione', label: 'Confusione', category: 'emotion' },
+    { id: 'ansia', label: 'Ansia', category: 'emotion' },
     { id: 'blocco', label: 'Blocco', category: 'context' },
-    { id: 'conflitto', label: 'Conflitto', category: 'context' },
-    { id: 'paura', label: 'Paura', category: 'emotion' },
-    { id: 'inizio', label: 'Inizio', category: 'action' },
-    { id: 'scelta', label: 'Scelta', category: 'action' },
     { id: 'tristezza', label: 'Tristezza', category: 'emotion' },
-    { id: 'caos', label: 'Caos', category: 'context' },
+    { id: 'rabbia', label: 'Rabbia', category: 'emotion' },
+    { id: 'conflitto', label: 'Conflitto', category: 'context' },
+    { id: 'solitudine', label: 'Solitudine', category: 'emotion' },
+    { id: 'apatia', label: 'Apatia', category: 'emotion' },
+    { id: 'colpa', label: 'Senso di Colpa', category: 'emotion' },
+    { id: 'tradimento', label: 'Tradimento', category: 'context' },
+    { id: 'vuoto', label: 'Vuoto Interiore', category: 'emotion' },
+    { id: 'crisi', label: 'Crisi', category: 'context' },
+    { id: 'gelosia', label: 'Gelosia', category: 'emotion' },
+    { id: 'nostalgia', label: 'Nostalgia', category: 'emotion' },
+    { id: 'urgenza', label: 'Urgenza', category: 'action' },
     { id: 'attesa', label: 'Attesa', category: 'action' },
-    { id: 'relazione', label: 'Relazioni', category: 'context' },
-    { id: 'lavoro', label: 'Carriera', category: 'context' },
+    { id: 'lavoro', label: 'Problemi di Lavoro', category: 'context' },
+    { id: 'relazione', label: 'Crisi Relazionale', category: 'context' },
     { id: 'stanchezza', label: 'Esaurimento', category: 'emotion' },
+    { id: 'paura', label: 'Paura', category: 'emotion' },
 ];
 
 const GOAL_TAGS: TagOption[] = [
-    { id: 'pace', label: 'Pace', category: 'emotion' },
-    { id: 'successo', label: 'Successo', category: 'action' },
+    { id: 'pace', label: 'Pace Interiore', category: 'emotion' },
+    { id: 'equilibrio', label: 'Equilibrio', category: 'emotion' },
     { id: 'chiarezza', label: 'Chiarezza', category: 'emotion' },
-    { id: 'azione', label: 'Azione', category: 'action' },
+    { id: 'coraggio', label: 'Coraggio', category: 'emotion' },
+    { id: 'successo', label: 'Successo', category: 'action' },
+    { id: 'verita', label: 'Verità', category: 'context' },
+    { id: 'guarigione', label: 'Guarigione', category: 'action' },
+    { id: 'perdono', label: 'Perdono', category: 'action' },
+    { id: 'indipendenza', label: 'Indipendenza', category: 'action' },
+    { id: 'abbondanza', label: 'Abbondanza', category: 'context' },
+    { id: 'gioia', label: 'Gioia di Vivere', category: 'emotion' },
+    { id: 'saggezza', label: 'Saggezza', category: 'emotion' },
+    { id: 'semplicita', label: 'Semplicità', category: 'emotion' },
     { id: 'unione', label: 'Unione', category: 'context' },
-    { id: 'liberazione', label: 'Liberazione', category: 'action' },
-    { id: 'forza', label: 'Forza', category: 'emotion' },
-    { id: 'sicurezza', label: 'Stabilità', category: 'context' },
+    { id: 'sicurezza', label: 'Sicurezza', category: 'context' },
     { id: 'cambiamento', label: 'Cambiamento', category: 'action' },
-    { id: 'ordine', label: 'Ordine', category: 'context' },
 ];
 
 // --- HELPER COMPONENTS ---
@@ -48,8 +62,8 @@ const TagSelector: React.FC<{
     selected: string[], 
     toggle: (id: string) => void,
     max?: number
-}> = ({ options, selected, toggle, max = 3 }) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+}> = ({ options, selected, toggle, max = 5 }) => (
+    <div className="grid grid-cols-2 min-[400px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-3">
         {options.map(opt => {
             const isSelected = selected.includes(opt.id);
             const isDisabled = !isSelected && selected.length >= max;
@@ -58,9 +72,9 @@ const TagSelector: React.FC<{
                     key={opt.id}
                     onClick={() => toggle(opt.id)}
                     disabled={isDisabled}
-                    className={`py-3 px-4 rounded-lg text-sm font-medium tracking-wide transition-all duration-300 border backdrop-blur-sm
+                    className={`py-2 px-3 md:py-3 md:px-4 rounded-lg text-xs md:text-sm font-medium tracking-wide transition-all duration-300 border backdrop-blur-sm truncate
                         ${isSelected 
-                            ? 'bg-amber-900/30 border-amber-500/50 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.15)] transform scale-[1.02]' 
+                            ? 'bg-amber-900/40 border-amber-500/60 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.2)] transform scale-[1.02]' 
                             : isDisabled 
                                 ? 'opacity-20 cursor-not-allowed bg-transparent border-slate-800' 
                                 : 'bg-white/5 border-white/5 text-slate-400 hover:border-white/20 hover:text-slate-200 hover:bg-white/10'}
@@ -293,7 +307,7 @@ const App: React.FC = () => {
         isLastStep: boolean,
         isValid: boolean
     ) => (
-        <div className="animate-fade-in w-full max-w-3xl mx-auto py-10">
+        <div className="animate-fade-in w-full max-w-4xl mx-auto py-10">
             <div className="text-center mb-12">
                 <div className="inline-block px-3 py-1 mb-4 rounded-full border border-white/10 bg-white/5">
                     <span className="text-amber-500 text-[10px] font-bold uppercase tracking-[0.2em] block">Fase {step} di 2</span>
@@ -316,12 +330,12 @@ const App: React.FC = () => {
                 <div className="flex items-center justify-center gap-4 mb-8">
                      <div className="h-px bg-gradient-to-r from-transparent to-slate-800 w-16"></div>
                      <label className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-                        Risonanze Emotive
+                        Risonanze Emotive (Max 5)
                     </label>
                     <div className="h-px bg-gradient-to-l from-transparent to-slate-800 w-16"></div>
                 </div>
                 
-                <TagSelector options={tags} selected={selectedTags} toggle={toggleTag} />
+                <TagSelector options={tags} selected={selectedTags} toggle={toggleTag} max={5} />
             </div>
 
             <div className="flex justify-between items-center pt-8 border-t border-white/5">
@@ -489,7 +503,7 @@ const App: React.FC = () => {
                 </main>
 
                 <footer className="text-center text-slate-800 text-[10px] uppercase tracking-widest py-10 opacity-40">
-                    Oracle Genius &bull; Motore Semantico I Ching &bull; v2.0
+                    Oracle Genius &bull; Motore Semantico I Ching &bull; v2.2
                 </footer>
             </div>
             <InfoDisplay show={showInfo} onClose={() => setShowInfo(false)} />
