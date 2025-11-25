@@ -121,39 +121,129 @@ const HexagramCard: React.FC<{
             contentRef.current.scrollTop = 0;
         }
     }, [activeTab]);
+
+    // Mappatura Elementale per Stili Dinamici
+    const getElementStyles = (element: string) => {
+        switch (element) {
+            case 'HEAVEN':
+                return {
+                    bg: 'bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0a0a0c]', // Indigo profondo
+                    glow: 'bg-indigo-400',
+                    border: 'border-indigo-500/20',
+                    accentText: 'text-indigo-200',
+                    tabActive: 'text-indigo-400 border-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]',
+                    icon: '☁️'
+                };
+            case 'EARTH':
+                return {
+                    bg: 'bg-gradient-to-br from-[#1c1917] via-[#292524] to-[#0a0a0c]', // Pietra calda / Ambra scuro
+                    glow: 'bg-amber-700',
+                    border: 'border-amber-700/20',
+                    accentText: 'text-amber-200',
+                    tabActive: 'text-amber-400 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]',
+                    icon: '🌍'
+                };
+            case 'FIRE':
+                return {
+                    bg: 'bg-gradient-to-br from-[#2a0a0a] via-[#450a0a] to-[#0a0a0c]', // Rosso profondo
+                    glow: 'bg-red-500',
+                    border: 'border-red-500/20',
+                    accentText: 'text-red-200',
+                    tabActive: 'text-red-400 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]',
+                    icon: '🔥'
+                };
+            case 'WATER':
+                return {
+                    bg: 'bg-gradient-to-br from-[#020617] via-[#172554] to-[#0a0a0c]', // Blu abisso
+                    glow: 'bg-cyan-500',
+                    border: 'border-cyan-500/20',
+                    accentText: 'text-cyan-200',
+                    tabActive: 'text-cyan-400 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]',
+                    icon: '💧'
+                };
+            case 'THUNDER':
+                return {
+                    bg: 'bg-gradient-to-br from-[#101510] via-[#0f3020] to-[#0a0a0c]', // Verde elettrico scuro / Viola scuro
+                    glow: 'bg-emerald-400',
+                    border: 'border-emerald-500/20',
+                    accentText: 'text-emerald-200',
+                    tabActive: 'text-emerald-400 border-emerald-500 shadow-[0_0_10px_rgba(52,211,153,0.5)]',
+                    icon: '⚡'
+                };
+            case 'WIND':
+                return {
+                    bg: 'bg-gradient-to-br from-[#101715] via-[#1a2e26] to-[#0a0a0c]', // Verde vento / Teal
+                    glow: 'bg-teal-400',
+                    border: 'border-teal-500/20',
+                    accentText: 'text-teal-200',
+                    tabActive: 'text-teal-400 border-teal-500 shadow-[0_0_10px_rgba(45,212,191,0.5)]',
+                    icon: '🍃'
+                };
+            case 'MOUNTAIN':
+                return {
+                    bg: 'bg-gradient-to-br from-[#18181b] via-[#27272a] to-[#0a0a0c]', // Grigio solido
+                    glow: 'bg-slate-400',
+                    border: 'border-slate-500/20',
+                    accentText: 'text-slate-300',
+                    tabActive: 'text-slate-200 border-slate-400 shadow-[0_0_10px_rgba(148,163,184,0.5)]',
+                    icon: '🏔️'
+                };
+            case 'LAKE':
+                return {
+                    bg: 'bg-gradient-to-br from-[#1a1016] via-[#381a28] to-[#0a0a0c]', // Viola/Rosa metallico
+                    glow: 'bg-pink-400',
+                    border: 'border-pink-500/20',
+                    accentText: 'text-pink-200',
+                    tabActive: 'text-pink-400 border-pink-500 shadow-[0_0_10px_rgba(244,114,182,0.5)]',
+                    icon: '🌊'
+                };
+            default:
+                return {
+                    bg: 'bg-[#0a0a0c]/80',
+                    glow: 'bg-amber-900',
+                    border: 'border-white/5',
+                    accentText: 'text-slate-200',
+                    tabActive: 'text-amber-400 border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]',
+                    icon: '🔮'
+                };
+        }
+    };
+
+    const styles = getElementStyles(hex.element);
     
-    // Stili dinamici
-    const containerClass = "bg-[#0a0a0c]/80 backdrop-blur-xl h-[85vh] p-0 rounded-2xl flex flex-col relative overflow-hidden transition-all duration-500 border border-white/5 shadow-2xl";
+    // Stili dinamici container
+    const containerClass = `${styles.bg} backdrop-blur-xl h-[85vh] p-0 rounded-2xl flex flex-col relative overflow-hidden transition-all duration-700 border ${styles.border} shadow-2xl group`;
     
     return (
         <div className={containerClass}>
-            {/* Ambient Glow */}
-            <div className={`absolute -top-32 -right-32 w-80 h-80 rounded-full blur-[120px] pointer-events-none opacity-40 ${isStart ? 'bg-indigo-900' : 'bg-amber-900'}`}></div>
+            {/* Ambient Glow Dinamico */}
+            <div className={`absolute -top-40 -right-40 w-96 h-96 rounded-full blur-[100px] pointer-events-none opacity-20 group-hover:opacity-30 transition-opacity duration-1000 ${styles.glow}`}></div>
+            <div className={`absolute -bottom-20 -left-20 w-64 h-64 rounded-full blur-[80px] pointer-events-none opacity-10 group-hover:opacity-20 transition-opacity duration-1000 ${styles.glow}`}></div>
 
             {/* Header Fixed */}
-            <div className="flex flex-col items-center pt-8 pb-4 px-6 relative z-10 border-b border-white/5 shrink-0 bg-[#0a0a0c]/50">
-                <span className={`text-[10px] font-bold uppercase tracking-[0.3em] mb-4 ${isStart ? 'text-indigo-400' : 'text-amber-500'}`}>
+            <div className="flex flex-col items-center pt-8 pb-4 px-6 relative z-10 border-b border-white/5 shrink-0 bg-black/20 backdrop-blur-md">
+                <span className={`text-[10px] font-bold uppercase tracking-[0.3em] mb-4 ${styles.accentText} opacity-80`}>
                     {isStart ? "Situazione Attuale" : "Prospettiva Futura"}
                 </span>
                 
-                <div className="transform scale-75 mb-2">
+                <div className="transform scale-75 mb-2 filter drop-shadow-2xl">
                     <HexagramVisual lines={hex.lines} highlight={!isStart} />
                 </div>
                 
-                <h3 className="text-3xl md:text-4xl font-serif text-center mt-2 mb-1 text-slate-100 font-medium">
+                <h3 className={`text-3xl md:text-4xl font-serif text-center mt-2 mb-1 font-medium text-white drop-shadow-sm`}>
                     {hex.italianName}
                 </h3>
                 
-                <div className="flex items-center gap-2 text-slate-500 font-serif italic text-sm md:text-base">
-                    <span>Esagramma {hex.number}</span>
+                <div className={`flex items-center gap-2 font-serif italic text-sm md:text-base ${styles.accentText} opacity-70`}>
+                    <span>{styles.icon} Esagramma {hex.number}</span>
                     <span className="hidden md:inline">&bull;</span>
-                    <span className="hidden md:inline opacity-70">{hex.name}</span>
+                    <span className="hidden md:inline">{hex.name}</span>
                 </div>
             </div>
 
             {/* Tabs Navigation */}
-            <div className="flex justify-center py-4 relative z-10 border-b border-white/5 bg-[#0a0a0c]/30 shrink-0">
-                <div className="flex space-x-6">
+            <div className="flex justify-center py-4 relative z-10 border-b border-white/5 bg-black/10 shrink-0">
+                <div className="flex space-x-4 md:space-x-6">
                     {[
                         { id: 'GENERAL', label: 'Generale' },
                         { id: 'LOVE', label: 'Amore' },
@@ -163,15 +253,15 @@ const HexagramCard: React.FC<{
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`pb-2 text-xs font-bold uppercase tracking-widest transition-all duration-300 relative
+                            className={`pb-2 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all duration-300 relative px-2
                                 ${activeTab === tab.id 
-                                    ? 'text-amber-400' 
-                                    : 'text-slate-600 hover:text-slate-400'}
+                                    ? 'text-white' 
+                                    : 'text-slate-500 hover:text-slate-300'}
                             `}
                         >
                             {tab.label}
                             {activeTab === tab.id && (
-                                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></span>
+                                <span className={`absolute bottom-0 left-0 w-full h-[2px] ${styles.tabActive.split(' ')[1]} ${styles.tabActive.split(' ')[2]}`}></span>
                             )}
                         </button>
                     ))}
@@ -184,15 +274,15 @@ const HexagramCard: React.FC<{
                     {activeTab === 'GENERAL' && (
                         <div className="space-y-8">
                             {hex.traditionalImage && (
-                                <div className="bg-white/5 p-5 rounded-lg border border-white/5 italic font-serif text-slate-400 text-center text-lg leading-relaxed">
+                                <div className={`bg-white/5 p-5 rounded-lg border ${styles.border} italic font-serif ${styles.accentText} text-center text-lg leading-relaxed shadow-inner`}>
                                     "{hex.traditionalImage}"
                                 </div>
                             )}
                             
                             {hex.judgement && (
-                                <div className="border-l-2 border-amber-500/30 pl-6 py-2">
-                                    <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest mb-2">La Sentenza</h4>
-                                    <blockquote className="text-slate-300 text-xl font-serif italic leading-relaxed">
+                                <div className={`border-l-2 pl-6 py-2 ${styles.border.replace('/20', '/50')}`}>
+                                    <h4 className={`text-xs font-bold ${styles.accentText} uppercase tracking-widest mb-2 opacity-80`}>La Sentenza</h4>
+                                    <blockquote className="text-slate-200 text-xl font-serif italic leading-relaxed">
                                         {hex.judgement}
                                     </blockquote>
                                 </div>
@@ -208,22 +298,22 @@ const HexagramCard: React.FC<{
                     )}
 
                     {activeTab === 'LOVE' && (
-                        <div className="bg-gradient-to-b from-pink-900/5 to-transparent p-6 rounded-xl border border-pink-500/10">
-                            <h4 className="text-xs font-bold text-pink-400 uppercase tracking-widest mb-4">La Via del Cuore</h4>
+                        <div className="bg-gradient-to-b from-pink-500/10 to-transparent p-6 rounded-xl border border-pink-500/10">
+                            <h4 className="text-xs font-bold text-pink-300 uppercase tracking-widest mb-4">La Via del Cuore</h4>
                             <p className="text-slate-200 font-serif text-lg md:text-xl leading-8 text-justify">{hex.loveAdvice}</p>
                         </div>
                     )}
 
                     {activeTab === 'WORK' && (
-                        <div className="bg-gradient-to-b from-blue-900/5 to-transparent p-6 rounded-xl border border-blue-500/10">
-                            <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4">La Via dell'Opera</h4>
+                        <div className="bg-gradient-to-b from-blue-500/10 to-transparent p-6 rounded-xl border border-blue-500/10">
+                            <h4 className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-4">La Via dell'Opera</h4>
                             <p className="text-slate-200 font-serif text-lg md:text-xl leading-8 text-justify">{hex.workAdvice}</p>
                         </div>
                     )}
 
                     {activeTab === 'GROWTH' && (
-                        <div className="bg-gradient-to-b from-emerald-900/5 to-transparent p-6 rounded-xl border border-emerald-500/10">
-                            <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">La Via dello Spirito</h4>
+                        <div className="bg-gradient-to-b from-emerald-500/10 to-transparent p-6 rounded-xl border border-emerald-500/10">
+                            <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-4">La Via dello Spirito</h4>
                             <p className="text-slate-200 font-serif text-lg md:text-xl leading-8 text-justify">{hex.growthAdvice}</p>
                         </div>
                     )}
