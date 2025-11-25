@@ -2,6 +2,8 @@
 // Motore Audio Procedurale per Oracle Genius (Master Level)
 // Features: Binaural Theta Waves, Algorithmic Melodic Walker, Modal Scales, Physical Texture Synthesis
 
+type AudioMode = 'ORACLE' | 'MEDITATION';
+
 class AudioEngine {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -30,6 +32,7 @@ class AudioEngine {
   // Parametri Manuali
   private chimeDensity: number = 1.0; 
   private currentElement: string = 'EARTH';
+  private currentMode: AudioMode = 'MEDITATION'; // Default mode
 
   // Algorithmic Walker State
   private lastNoteIndex: number = 5; // Indice di partenza (centro scala)
@@ -112,6 +115,14 @@ class AudioEngine {
       }
   }
 
+  public setMode(mode: AudioMode) {
+      this.currentMode = mode;
+      // Forza l'aggiornamento immediato della texture per applicare i nuovi volumi
+      if (this.isPlaying) {
+          this.updateTexture(this.currentElement);
+      }
+  }
+
   public setVolume(value: number) {
       this.userVolume = Math.max(0, value);
       if (this.masterGain) {
@@ -135,9 +146,12 @@ class AudioEngine {
       // Quando cambi elemento, resetta l'indice melodico al centro per evitare salti fuori scala
       this.lastNoteIndex = 5;
       
-      // Suona immediatamente un chime per dare feedback all'utente
-      if (this.chimeTimer) clearTimeout(this.chimeTimer);
-      this.playRandomChime();
+      // Suona immediatamente un chime per dare feedback all'utente (solo se in meditazione)
+      // In modalità Oracolo evitiamo feedback bruschi
+      if (this.currentMode === 'MEDITATION') {
+          if (this.chimeTimer) clearTimeout(this.chimeTimer);
+          this.playRandomChime();
+      }
   }
 
   // --- REVERB ---
@@ -205,33 +219,27 @@ class AudioEngine {
 
       // 3. Sintesi Materica (TIMBRE MAPPING SPECIFICO PER ELEMENTO)
       let material = 'GLASS';
-      
       const r = Math.random();
       
       switch (this.currentElement) {
           case 'FIRE':
-              // Fuoco: Metallo (brillante), Legno (crepitio)
               if (r < 0.6) material = 'METAL';
               else material = 'WOOD';
               break;
           case 'WATER':
-              // Acqua: Vetro (Gocce), Gong (Profondità), Metal (Riflessi)
               if (r < 0.5) material = 'GLASS';
               else if (r < 0.8) material = 'GONG';
               else material = 'METAL';
               break;
           case 'EARTH':
-              // Terra: Legno (Solido), Gong (Sismico)
               if (r < 0.7) material = 'WOOD';
               else material = 'GONG';
               break;
           case 'WIND':
-              // Vento: Vetro (Campanelli a vento), Legno (Fruscio)
               if (r < 0.6) material = 'GLASS';
               else material = 'WOOD';
               break;
           case 'ETHER':
-              // Etere: Vetro e Metallo puro
               if (r < 0.5) material = 'GLASS';
               else material = 'METAL';
               break;
@@ -239,10 +247,18 @@ class AudioEngine {
               material = ['GLASS', 'WOOD', 'METAL'][Math.floor(r * 3)];
       }
 
-      // Boost volume texture per rendere evidente il materiale
+      // Boost volume texture
       const panner = this.context.createStereoPanner();
       panner.pan.value = this.randomRange(-0.4, 0.4);
-      const velocity = this.randomRange(0.7, 1.2); // Aumentato min velocity
+      
+      // --- MODE MODIFIERS (ORACLE vs MEDITATION) ---
+      let velocity = this.randomRange(0.7, 1.2); 
+      let dryMix = 0.3;
+
+      if (this.currentMode === 'ORACLE') {
+          velocity *= 0.4; // Molto più soft in modalità Oracolo
+          dryMix = 0.15; // Più lontano/riverberato, meno presenza
+      }
 
       const gain = this.context.createGain();
       gain.connect(panner);
@@ -250,13 +266,13 @@ class AudioEngine {
       panner.connect(this.reverbNode); 
       if (material !== 'GONG') {
           const dryGain = this.context.createGain();
-          dryGain.gain.value = 0.3 * velocity; // Aumentato dry mix
+          dryGain.gain.value = dryMix * velocity; 
           panner.connect(dryGain);
           dryGain.connect(this.compressor); 
       }
 
+      // SINTESI STRUMENTI (Identica a prima, ma pilotata da velocity modificata)
       if (material === 'GLASS') {
-          // Sinusoidale pura con vibrato
           const osc = this.context.createOscillator();
           osc.type = 'sine';
           osc.frequency.value = freq;
@@ -282,7 +298,6 @@ class AudioEngine {
           this.oscillators.push(vibrato);
 
       } else if (material === 'WOOD') {
-          // Triangolare filtrata (suono secco)
           const osc = this.context.createOscillator();
           osc.type = 'triangle';
           osc.frequency.value = freq;
@@ -304,14 +319,13 @@ class AudioEngine {
           osc.stop(t + decay + 0.1);
 
       } else if (material === 'METAL') {
-          // FM Bell-like synthesis
           const fund = this.context.createOscillator();
           fund.type = 'sine';
           fund.frequency.value = freq;
           
           const mod = this.context.createOscillator();
           mod.type = 'square';
-          mod.frequency.value = freq * 1.58; // Rapporto inarmonico
+          mod.frequency.value = freq * 1.58; 
           const modGain = this.context.createGain();
           modGain.gain.value = freq * 0.5;
 
@@ -331,17 +345,16 @@ class AudioEngine {
           mod.stop(t + decay + 0.5);
 
       } else if (material === 'GONG') {
-          // Suono complesso profondo
           const osc1 = this.context.createOscillator();
           osc1.frequency.value = freq;
           const osc2 = this.context.createOscillator();
           osc2.type = 'sawtooth';
-          osc2.frequency.value = freq * 1.005; // Battimento
+          osc2.frequency.value = freq * 1.005; 
           
           const filter = this.context.createBiquadFilter();
           filter.type = 'lowpass';
           filter.frequency.setValueAtTime(200, t);
-          filter.frequency.linearRampToValueAtTime(600, t + 2); // Swell
+          filter.frequency.linearRampToValueAtTime(600, t + 2); 
 
           const decay = 10.0;
           gain.gain.setValueAtTime(0, t);
@@ -358,9 +371,18 @@ class AudioEngine {
       }
 
       // Prossimo chime
-      const baseMin = 1500;
-      const baseMax = 5000;
-      const nextInterval = this.randomRange(baseMin / this.chimeDensity, baseMax / this.chimeDensity); 
+      // In modalità Oracolo i tempi sono molto dilatati (più rari)
+      let densityMultiplier = this.chimeDensity;
+      let extraDelay = 0;
+      
+      if (this.currentMode === 'ORACLE') {
+          densityMultiplier = 0.5; // Ignora slider density utente, forza bassa densità
+          extraDelay = 10000; // Aggiunge 10 secondi extra di silenzio tra un rintocco e l'altro
+      }
+
+      const baseMin = 1500 + extraDelay;
+      const baseMax = 5000 + extraDelay;
+      const nextInterval = this.randomRange(baseMin / densityMultiplier, baseMax / densityMultiplier); 
       this.chimeTimer = setTimeout(() => this.playRandomChime(), nextInterval);
   }
 
@@ -375,10 +397,13 @@ class AudioEngine {
     // Ottieni le frequenze base per l'elemento corrente
     const baseFreqs = this.droneTunings[this.currentElement] || this.droneTunings['EARTH'];
 
-    // 1. DRONE BINAURALE STEREO (THETA WAVES)
+    // 1. DRONE BINAURALE STEREO
+    // In modalità Oracle il drone è leggermente più basso
+    const volMod = this.currentMode === 'ORACLE' ? 0.7 : 1.0;
+    
     const droneLevels = [
-        { freqIdx: 0, vol: 0.15 }, 
-        { freqIdx: 1, vol: 0.10 }
+        { freqIdx: 0, vol: 0.15 * volMod }, 
+        { freqIdx: 1, vol: 0.10 * volMod }
     ];
 
     droneLevels.forEach(d => {
@@ -391,16 +416,16 @@ class AudioEngine {
         oscL.type = 'sine';
         oscL.frequency.value = baseFreq;
         const panL = this.context.createStereoPanner();
-        panL.pan.value = -1; // Hard Left
+        panL.pan.value = -1; 
         const gainL = this.context.createGain();
         gainL.gain.value = d.vol;
 
-        // RIGHT EAR (Binaural Shift)
+        // RIGHT EAR
         const oscR = this.context.createOscillator();
         oscR.type = 'sine';
-        oscR.frequency.value = baseFreq + 4; // +4Hz per Theta Waves
+        oscR.frequency.value = baseFreq + 4; 
         const panR = this.context.createStereoPanner();
-        panR.pan.value = 1; // Hard Right
+        panR.pan.value = 1; 
         const gainR = this.context.createGain();
         gainR.gain.value = d.vol;
 
@@ -430,7 +455,7 @@ class AudioEngine {
     this.noiseNode = this.createBrownNoise();
     if (this.noiseNode && this.reverbNode) {
         this.textureGain = this.context.createGain();
-        this.textureGain.gain.value = 0.08; 
+        this.textureGain.gain.value = 0.0; // Inizializza a zero, updateTexture settarà il valore corretto
         
         this.textureFilter = this.context.createBiquadFilter();
         this.textureFilter.type = 'lowpass';
@@ -445,9 +470,10 @@ class AudioEngine {
 
     this.isPlaying = true;
     this.fadeIn();
+    this.updateTexture(this.currentElement); // Applica volumi corretti basati sul mode
     
     // Start chiming
-    this.chimeTimer = setTimeout(() => this.playRandomChime(), 1000);
+    this.chimeTimer = setTimeout(() => this.playRandomChime(), 2000);
   }
 
   // --- PITCH MORPHING (Realtime Drone Update) ---
@@ -455,23 +481,20 @@ class AudioEngine {
       if (!this.context) return;
       const targetFreqs = this.droneTunings[element] || this.droneTunings['EARTH'];
       const t = this.context.currentTime;
-      const duration = 2.0; // Glissando lento di 2 secondi
+      const duration = 2.0; 
 
-      // Aggiorna Drone Binaurale
       this.activeDroneOscillators.forEach(d => {
           if (targetFreqs[d.baseIndex]) {
               const target = targetFreqs[d.baseIndex];
               d.left.frequency.exponentialRampToValueAtTime(target, t + duration);
-              d.right.frequency.exponentialRampToValueAtTime(target + 4, t + duration); // Mantieni scarto binaurale
+              d.right.frequency.exponentialRampToValueAtTime(target + 4, t + duration); 
           }
       });
 
-      // Aggiorna Pad (Armonizzato al drone)
       this.activePadOscillators.forEach(p => {
-         // Calcola rapporto armonico semplice (Ottava + Quinta) basato sulla nuova fondamentale
          const base = targetFreqs[0];
-         let target = base * 2; // Ottava
-         if (p.baseIndex === 1) target = base * 3; // Quinta sopra ottava
+         let target = base * 2; 
+         if (p.baseIndex === 1) target = base * 3; 
          
          p.osc.frequency.exponentialRampToValueAtTime(target, t + duration);
       });
@@ -481,9 +504,11 @@ class AudioEngine {
       if (!this.context || !this.reverbNode) return;
       
       const baseFreqs = this.droneTunings[this.currentElement] || this.droneTunings['EARTH'];
-      // Armonizza il pad sulla fondamentale dell'elemento: Ottava sopra e Quinta sopra
       const padNotes = [baseFreqs[0] * 2, baseFreqs[0] * 3]; 
       
+      // In modalità Oracle il Pad è più basso
+      const volMod = this.currentMode === 'ORACLE' ? 0.015 : 0.03;
+
       padNotes.forEach((freq, idx) => {
          const osc = this.context!.createOscillator();
          osc.type = 'triangle';
@@ -501,7 +526,7 @@ class AudioEngine {
          filter.frequency.value = 300; 
 
          const gain = this.context!.createGain();
-         gain.gain.value = 0.03; 
+         gain.gain.value = volMod; 
 
          osc.connect(filter);
          filter.connect(gain);
@@ -522,7 +547,10 @@ class AudioEngine {
       const t = this.context.currentTime;
       const duration = 1.0; 
 
-      // Reset volume texture base
+      // CALCOLO VOLUME TEXTURE BASATO SUL MODE
+      // In modalità ORACLE la texture fisica (rumore acqua/fuoco) è quasi spenta (20-25% del normale)
+      const modeMultiplier = this.currentMode === 'ORACLE' ? 0.25 : 1.0;
+
       let targetGain = 0.08;
 
       if (this.textureLFO) {
@@ -541,7 +569,7 @@ class AudioEngine {
               this.textureLFO.type = 'sawtooth';
               this.textureLFO.frequency.value = 15; 
               const gainMod = this.context.createGain();
-              gainMod.gain.value = 0.04; 
+              gainMod.gain.value = 0.04 * modeMultiplier; 
               
               this.textureLFO.connect(gainMod);
               gainMod.connect(this.textureGain.gain);
@@ -607,7 +635,8 @@ class AudioEngine {
               break;
       }
       
-      this.textureGain.gain.setTargetAtTime(targetGain, t, 0.5);
+      // Applica il volume finale scalato per il Mode
+      this.textureGain.gain.setTargetAtTime(targetGain * modeMultiplier, t, 0.5);
   }
 
   private fadeIn() {
@@ -655,6 +684,7 @@ class AudioEngine {
         this.textureFilter = null;
         this.isPlaying = false;
         this.chimeDensity = 1.0; 
+        this.currentMode = 'MEDITATION'; // Reset default
     });
   }
 

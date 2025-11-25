@@ -383,8 +383,9 @@ const App: React.FC = () => {
 
     const enterOracleMode = () => {
         setAppMode('ORACLE');
-        // Initialize audio engine on user interaction
+        // Initialize audio engine
         audioManager.init();
+        audioManager.setMode('ORACLE'); // Set to quieter, sparse mode
         audioManager.startDrone();
         audioManager.updateTexture('NEUTRAL'); // Assicura texture standard per Oracolo
         setStep(1); // Go to breathing
@@ -392,6 +393,7 @@ const App: React.FC = () => {
 
     const enterMeditationMode = () => {
         setAppMode('MEDITATION');
+        audioManager.setMode('MEDITATION'); // Set to full immersive mode
         // Audio will be handled by MeditationLab component
     };
 
