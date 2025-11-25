@@ -60,6 +60,21 @@ const BreathingExercise: React.FC<BreathingExerciseProps> = ({ onComplete }) => 
     };
   }, []);
 
+  // Calcolo delle classi dinamiche per l'animazione
+  const getCircleClasses = () => {
+      if (phase === 'INHALE') return 'scale-125 border-amber-100 bg-amber-500/10 duration-[4000ms]';
+      if (phase === 'HOLD') return 'scale-125 border-amber-300/50 bg-amber-500/20 duration-[1000ms]'; // Mantiene la scala massima, cambia leggermente colore
+      if (phase === 'EXHALE') return 'scale-90 border-amber-900/50 bg-transparent duration-[4000ms]';
+      return '';
+  };
+
+  const getGlowClasses = () => {
+      if (phase === 'INHALE') return 'scale-150 opacity-40 duration-[4000ms]';
+      if (phase === 'HOLD') return 'scale-150 opacity-30 duration-[1000ms]'; // Mantiene scala massima
+      if (phase === 'EXHALE') return 'scale-75 opacity-10 duration-[4000ms]';
+      return '';
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-[60vh] animate-fade-in text-center px-6">
       <h2 className="text-3xl font-serif text-amber-100 mb-12">Centratura</h2>
@@ -67,13 +82,13 @@ const BreathingExercise: React.FC<BreathingExerciseProps> = ({ onComplete }) => 
       {/* Visual Circle Animation */}
       <div className="relative mb-16">
         {/* Glow Effect */}
-        <div className={`absolute inset-0 bg-amber-500 rounded-full blur-[60px] transition-all duration-[4000ms] ease-in-out opacity-20
-            ${phase === 'INHALE' ? 'scale-150 opacity-40' : phase === 'EXHALE' ? 'scale-75 opacity-10' : 'scale-110 opacity-30'}
+        <div className={`absolute inset-0 bg-amber-500 rounded-full blur-[60px] transition-all ease-in-out
+            ${getGlowClasses()}
         `}></div>
         
         {/* Breathing Circle */}
-        <div className={`w-48 h-48 rounded-full border-2 border-amber-200/50 flex items-center justify-center backdrop-blur-sm transition-all duration-[4000ms] ease-in-out shadow-[0_0_30px_rgba(251,191,36,0.2)]
-            ${phase === 'INHALE' ? 'scale-125 border-amber-100 bg-amber-500/10' : phase === 'EXHALE' ? 'scale-90 border-amber-900/50 bg-transparent' : 'scale-105 border-amber-300/30'}
+        <div className={`w-48 h-48 rounded-full border-2 border-amber-200/50 flex items-center justify-center backdrop-blur-sm transition-all ease-in-out shadow-[0_0_30px_rgba(251,191,36,0.2)]
+            ${getCircleClasses()}
         `}>
           <span className="text-xl font-serif italic text-amber-100 transition-opacity duration-1000">
             {instruction}

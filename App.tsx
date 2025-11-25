@@ -4,6 +4,7 @@ import type { Hexagram } from './types';
 import HexagramVisual from './components/HexagramVisual';
 import InfoDisplay from './components/InfoDisplay';
 import BreathingExercise from './components/BreathingExercise';
+import MeditationLab from './components/MeditationLab';
 import { performSemanticAnalysis, SemanticAnalysisResult } from './utils/semanticEngine';
 import { audioManager } from './utils/audioEngine';
 
@@ -327,14 +328,13 @@ const HexagramCard: React.FC<{
 // --- COMPONENTE PRINCIPALE ---
 
 const App: React.FC = () => {
-    // State del Wizard
-    // 0 = Landing (Start Ritual)
-    // 1 = Breathing (Centering)
-    // 2 = Situation Input
-    // 3 = Goal Input
-    // 4 = Results
+    // Mode State: PORTAL (Landing) | ORACLE (App Classica) | MEDITATION (New Mode)
+    const [appMode, setAppMode] = useState<'PORTAL' | 'ORACLE' | 'MEDITATION'>('PORTAL');
+
+    // State del Wizard Oracolo
     const [step, setStep] = useState<number>(0);
     const [isMuted, setIsMuted] = useState(false);
+    const [volume, setVolume] = useState(1.0); // Default impostato a 1.0 (ex massimo)
     
     // Dati Input Utente
     const [situationText, setSituationText] = useState('');
@@ -355,11 +355,50 @@ const App: React.FC = () => {
         audioManager.toggleMute(!isMuted);
     };
 
-    const startRitual = () => {
+    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = parseFloat(e.target.value);
+        setVolume(val);
+        audioManager.setVolume(val);
+        if (val > 0 && isMuted) {
+            setIsMuted(false);
+            audioManager.toggleMute(false);
+        }
+    };
+
+    // VISIBILITY CHANGE HANDLER (Per risparmiare batteria e non infastidire)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                audioManager.setSystemSuspended(true);
+            } else {
+                audioManager.setSystemSuspended(false);
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, []);
+
+    const enterOracleMode = () => {
+        setAppMode('ORACLE');
         // Initialize audio engine on user interaction
         audioManager.init();
         audioManager.startDrone();
+        audioManager.updateTexture('NEUTRAL'); // Assicura texture standard per Oracolo
         setStep(1); // Go to breathing
+    };
+
+    const enterMeditationMode = () => {
+        setAppMode('MEDITATION');
+        // Audio will be handled by MeditationLab component
+    };
+
+    const returnToPortal = () => {
+        setAppMode('PORTAL');
+        setStep(0);
+        reset(); // Reset Oracle state
     };
 
     // Handlers
@@ -388,6 +427,8 @@ const App: React.FC = () => {
             if (result) {
                 setAnalysisResult(result);
                 setStep(4);
+                // Aggiorniamo la texture sonora in base all'esagramma di partenza
+                audioManager.updateTexture(result.startHexagram.element);
                 window.scrollTo(0,0);
             }
             setIsAnalyzing(false);
@@ -395,43 +436,59 @@ const App: React.FC = () => {
     };
 
     const reset = () => {
-        setStep(0); // Torniamo alla landing page
+        setStep(0); 
         setSituationText('');
         setSituationTags([]);
         setGoalText('');
         setGoalTags([]);
         setAnalysisResult(null);
         audioManager.stop(); // Fermiamo l'audio quando si resetta
+        audioManager.updateTexture('NEUTRAL'); // Reset texture
         window.scrollTo(0,0);
     };
 
-    // --- LANDING PAGE (STEP 0) ---
-    const renderLanding = () => (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] animate-fade-in text-center px-4">
-            <div className="mb-10 relative">
-                <div className="absolute inset-0 bg-amber-500 blur-[80px] opacity-20 rounded-full animate-pulse"></div>
-                <div className="w-32 h-32 rounded-full border border-amber-500/30 flex items-center justify-center bg-[#0a0a0c] relative z-10 shadow-[0_0_40px_rgba(245,158,11,0.1)]">
-                    <span className="text-5xl">🔮</span>
-                </div>
+    // --- NUOVO PORTALE (MODE SELECTION) ---
+    const renderPortal = () => (
+        <div className="flex flex-col items-center justify-center min-h-[85vh] animate-fade-in text-center px-4">
+             <div className="mb-10 relative">
+                <div className="absolute inset-0 bg-amber-500 blur-[100px] opacity-10 rounded-full animate-pulse"></div>
+                <h1 className="text-6xl md:text-8xl font-serif text-gold-gradient mb-4 tracking-tight relative z-10">Oracle Genius</h1>
+                <p className="text-slate-500 uppercase tracking-[0.4em] text-xs font-bold">Suite Spirituale</p>
             </div>
-            
-            <h1 className="text-6xl md:text-8xl font-serif text-gold-gradient mb-6 tracking-tight">Oracle Genius</h1>
-            <p className="text-slate-400 text-lg md:text-xl font-light max-w-2xl mx-auto leading-relaxed mb-12">
-                Un antico specchio digitale per l'anima moderna.<br/>
-                Prima di chiedere, fermati. Prima di sapere, respira.
-            </p>
-            
-            <button 
-                onClick={startRitual}
-                className="group relative bg-transparent border border-amber-600/50 text-amber-100 hover:bg-amber-900/20 px-12 py-5 rounded-full font-medium text-lg transition-all duration-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] tracking-widest uppercase text-xs"
-            >
-                <span className="relative z-10">Inizia il Rituale</span>
-                <div className="absolute inset-0 rounded-full bg-amber-500/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </button>
-            
-            <p className="mt-8 text-xs text-slate-600 uppercase tracking-widest opacity-60">
-                Audio Consigliato per l'immersione
-            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl w-full mt-12">
+                
+                {/* CARD ORACOLO */}
+                <button 
+                    onClick={enterOracleMode}
+                    className="group relative bg-[#0a0a0c] border border-white/5 hover:border-amber-500/30 rounded-2xl p-10 transition-all duration-500 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)] text-left flex flex-col items-center md:items-start"
+                >
+                    <div className="w-16 h-16 rounded-full bg-amber-900/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <span className="text-3xl">🔮</span>
+                    </div>
+                    <h2 className="text-3xl font-serif text-slate-200 mb-3 group-hover:text-amber-200 transition-colors">L'Oracolo</h2>
+                    <p className="text-slate-500 font-light leading-relaxed mb-6">
+                        Consulta l'antica saggezza dell'I Ching per illuminare il tuo cammino. Analisi semantica e psicologica della tua situazione.
+                    </p>
+                    <span className="text-xs font-bold text-amber-600 uppercase tracking-widest group-hover:underline decoration-amber-600/50 underline-offset-4">Inizia Consulto &rarr;</span>
+                </button>
+
+                {/* CARD MEDITAZIONE */}
+                <button 
+                    onClick={enterMeditationMode}
+                    className="group relative bg-[#0a0a0c] border border-white/5 hover:border-indigo-500/30 rounded-2xl p-10 transition-all duration-500 hover:shadow-[0_0_40px_rgba(99,102,241,0.1)] text-left flex flex-col items-center md:items-start"
+                >
+                    <div className="w-16 h-16 rounded-full bg-indigo-900/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <span className="text-3xl">🧘</span>
+                    </div>
+                    <h2 className="text-3xl font-serif text-slate-200 mb-3 group-hover:text-indigo-200 transition-colors">Sala di Meditazione</h2>
+                    <p className="text-slate-500 font-light leading-relaxed mb-6">
+                        Immergiti in un paesaggio sonoro procedurale. Personalizza gli elementi e il timer per la tua pratica quotidiana.
+                    </p>
+                    <span className="text-xs font-bold text-indigo-500 uppercase tracking-widest group-hover:underline decoration-indigo-500/50 underline-offset-4">Entra nel Laboratorio &rarr;</span>
+                </button>
+
+            </div>
         </div>
     );
 
@@ -581,7 +638,7 @@ const App: React.FC = () => {
                     </div>
                 </div>
 
-                {/* PSYCHOMAGIC TASK SECTION - NEW POINT 3 */}
+                {/* PSYCHOMAGIC TASK SECTION */}
                 {startHexagram.psychomagicTask && (
                     <div className="max-w-4xl mx-auto mt-12 mb-20 animate-fade-in">
                         <div className="bg-[#0c0c0e] border border-indigo-900/30 p-8 rounded-2xl relative overflow-hidden group hover:border-indigo-500/40 transition-colors">
@@ -608,10 +665,10 @@ const App: React.FC = () => {
 
                 <div className="text-center mt-32">
                     <button 
-                        onClick={reset}
+                        onClick={returnToPortal}
                         className="text-slate-600 hover:text-amber-400 text-xs font-bold uppercase tracking-[0.3em] transition-colors py-4 px-8 border-b border-transparent hover:border-amber-900/50"
                     >
-                        Nuova Consultazione
+                        Torna al Portale
                     </button>
                 </div>
             </div>
@@ -624,18 +681,30 @@ const App: React.FC = () => {
                 
                 {/* Navbar Minimal */}
                 <nav className="w-full py-8 px-6 flex justify-between items-center max-w-[1400px] mx-auto z-50 relative">
-                    <div className="flex items-center gap-4 cursor-pointer group" onClick={reset}>
+                    <div className="flex items-center gap-4 cursor-pointer group" onClick={returnToPortal}>
                         <div className="w-10 h-10 rounded-full border border-amber-500/20 flex items-center justify-center group-hover:border-amber-500/50 transition-colors bg-black/50 backdrop-blur-md">
                             <div className="w-2 h-2 bg-amber-600 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.6)] group-hover:scale-125 transition-transform"></div>
                         </div>
                         <span className="font-serif text-2xl text-slate-300 tracking-wide">Oracle <span className="text-amber-600">Genius</span></span>
                     </div>
                     
-                    <div className="flex items-center gap-4">
-                        {step > 0 && (
-                             <button onClick={toggleAudio} className="text-slate-600 hover:text-amber-400 transition-colors p-2">
-                                {isMuted ? '🔇' : '🔊'}
-                            </button>
+                    <div className="flex items-center gap-6">
+                        {/* Audio Controls visible in active modes */}
+                        {(appMode !== 'PORTAL') && (
+                            <div className="flex items-center gap-3 bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:border-white/10 transition-colors animate-fade-in">
+                                <button onClick={toggleAudio} className="text-slate-400 hover:text-amber-400 transition-colors p-1">
+                                    {isMuted ? '🔇' : '🔊'}
+                                </button>
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="2" 
+                                    step="0.01" 
+                                    value={volume}
+                                    onChange={handleVolumeChange}
+                                    className="w-20 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-400"
+                                />
+                            </div>
                         )}
                         <button onClick={() => setShowInfo(true)} className="text-[10px] font-bold text-slate-600 hover:text-slate-200 uppercase tracking-[0.2em] transition-colors border border-transparent hover:border-white/10 px-4 py-2 rounded-full">
                             Info
@@ -645,46 +714,54 @@ const App: React.FC = () => {
 
                 <main className="container mx-auto px-4 flex flex-col items-center justify-center min-h-[85vh]">
                     
-                    {step === 0 && renderLanding()}
+                    {appMode === 'PORTAL' && renderPortal()}
 
-                    {step === 1 && (
-                        <BreathingExercise onComplete={() => setStep(2)} />
-                    )}
-                    
-                    {step === 2 && renderWizardStep(
-                        "Lo Stato Presente",
-                        "Chiudi gli occhi per un istante. Respira. Qual è l'energia che senti vibrare nella tua vita adesso? Descrivila senza giudizio.",
-                        "In questo momento sento...",
-                        situationText,
-                        setSituationText,
-                        SITUATION_TAGS,
-                        situationTags,
-                        (id) => toggleSituationTag(id),
-                        handleNext,
-                        false,
-                        situationText.length > 2 || situationTags.length > 0
+                    {/* ORACLE MODE RENDER */}
+                    {appMode === 'ORACLE' && (
+                        <>
+                            {step === 1 && <BreathingExercise onComplete={() => setStep(2)} />}
+                            
+                            {step === 2 && renderWizardStep(
+                                "Lo Stato Presente",
+                                "Chiudi gli occhi per un istante. Respira. Qual è l'energia che senti vibrare nella tua vita adesso? Descrivila senza giudizio.",
+                                "In questo momento sento...",
+                                situationText,
+                                setSituationText,
+                                SITUATION_TAGS,
+                                situationTags,
+                                (id) => toggleSituationTag(id),
+                                handleNext,
+                                false,
+                                situationText.length > 2 || situationTags.length > 0
+                            )}
+
+                            {step === 3 && renderWizardStep(
+                                "L'Orizzonte",
+                                "Se tutto fosse possibile, dove vorresti che questa energia fluisse? Qual è la trasformazione che la tua anima sta chiedendo?",
+                                "Il mio cuore cerca...",
+                                goalText,
+                                setGoalText,
+                                GOAL_TAGS,
+                                goalTags,
+                                (id) => toggleGoalTag(id),
+                                handleNext,
+                                true,
+                                goalTags.length > 0 || goalText.length > 2
+                            )}
+
+                            {step === 4 && renderResult()}
+                        </>
                     )}
 
-                    {step === 3 && renderWizardStep(
-                        "L'Orizzonte",
-                        "Se tutto fosse possibile, dove vorresti che questa energia fluisse? Qual è la trasformazione che la tua anima sta chiedendo?",
-                        "Il mio cuore cerca...",
-                        goalText,
-                        setGoalText,
-                        GOAL_TAGS,
-                        goalTags,
-                        (id) => toggleGoalTag(id),
-                        handleNext,
-                        true,
-                        goalTags.length > 0 || goalText.length > 2
+                    {/* MEDITATION MODE RENDER */}
+                    {appMode === 'MEDITATION' && (
+                        <MeditationLab onExit={returnToPortal} />
                     )}
-
-                    {step === 4 && renderResult()}
 
                 </main>
 
                 <footer className="text-center text-slate-800 text-[10px] uppercase tracking-widest py-10 opacity-40">
-                    Oracle Genius &bull; Motore Semantico I Ching &bull; v2.2
+                    Oracle Genius &bull; Motore Semantico I Ching &bull; v3.0
                 </footer>
             </div>
             <InfoDisplay show={showInfo} onClose={() => setShowInfo(false)} />
