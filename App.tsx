@@ -681,20 +681,20 @@ const App: React.FC = () => {
         <>
             <div className="min-h-screen bg-[#050505] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#15151a] via-[#050505] to-[#000000] text-slate-200 font-sans selection:bg-amber-900 selection:text-white overflow-x-hidden">
                 
-                {/* Navbar Minimal */}
-                <nav className="w-full py-8 px-6 flex justify-between items-center max-w-[1400px] mx-auto z-50 relative">
-                    <div className="flex items-center gap-4 cursor-pointer group" onClick={returnToPortal}>
-                        <div className="w-10 h-10 rounded-full border border-amber-500/20 flex items-center justify-center group-hover:border-amber-500/50 transition-colors bg-black/50 backdrop-blur-md">
+                {/* Navbar Minimal Responsive */}
+                <nav className="w-full py-4 md:py-8 px-4 md:px-6 flex justify-between items-center max-w-[1400px] mx-auto z-50 relative">
+                    <div className="flex items-center gap-2 md:gap-4 cursor-pointer group" onClick={returnToPortal}>
+                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-amber-500/20 flex items-center justify-center group-hover:border-amber-500/50 transition-colors bg-black/50 backdrop-blur-md">
                             <div className="w-2 h-2 bg-amber-600 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.6)] group-hover:scale-125 transition-transform"></div>
                         </div>
-                        <span className="font-serif text-2xl text-slate-300 tracking-wide">Oracle <span className="text-amber-600">Genius</span></span>
+                        <span className="font-serif text-lg md:text-2xl text-slate-300 tracking-wide">Oracle <span className="text-amber-600">Genius</span></span>
                     </div>
                     
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2 md:gap-6">
                         {/* Audio Controls visible in active modes */}
                         {(appMode !== 'PORTAL') && (
-                            <div className="flex items-center gap-3 bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:border-white/10 transition-colors animate-fade-in">
-                                <button onClick={toggleAudio} className="text-slate-400 hover:text-amber-400 transition-colors p-1">
+                            <div className="flex items-center gap-2 md:gap-3 bg-white/5 px-2 md:px-3 py-1 rounded-full border border-white/5 hover:border-white/10 transition-colors animate-fade-in">
+                                <button onClick={toggleAudio} className="text-slate-400 hover:text-amber-400 transition-colors p-1 text-sm md:text-base">
                                     {isMuted ? '🔇' : '🔊'}
                                 </button>
                                 <input 
@@ -704,12 +704,16 @@ const App: React.FC = () => {
                                     step="0.01" 
                                     value={volume}
                                     onChange={handleVolumeChange}
-                                    className="w-20 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-400"
+                                    className="w-16 md:w-20 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500 hover:accent-amber-400"
                                 />
                             </div>
                         )}
-                        <button onClick={() => setShowInfo(true)} className="text-[10px] font-bold text-slate-600 hover:text-slate-200 uppercase tracking-[0.2em] transition-colors border border-transparent hover:border-white/10 px-4 py-2 rounded-full">
-                            Info
+                        <button 
+                            onClick={() => setShowInfo(true)} 
+                            className="bg-amber-600/90 hover:bg-amber-500 text-white text-[10px] font-bold uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] px-3 py-2 md:px-6 md:py-3 rounded-full flex items-center gap-2 transform hover:-translate-y-0.5 whitespace-nowrap"
+                        >
+                            <span className="text-sm md:text-base">ℹ</span> 
+                            <span className="hidden min-[380px]:inline">Guida</span>
                         </button>
                     </div>
                 </nav>

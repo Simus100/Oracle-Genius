@@ -1,6 +1,6 @@
 
 // Motore Audio Procedurale per Oracle Genius (Master Level)
-// Features: Binaural Theta Waves, Algorithmic Melodic Walker, Modal Scales, Physical Texture Synthesis
+// Features: Binaural Theta Waves (Ramp Down), Isochronic Tones, Algorithmic Melodic Walker, Modal Scales (432Hz), Physical Texture Synthesis
 
 type AudioMode = 'ORACLE' | 'MEDITATION';
 
@@ -14,14 +14,20 @@ class AudioEngine {
   // Nodi attivi
   private oscillators: AudioNode[] = []; 
   
-  // Trackers specifici per il Pitch Morphing
+  // Trackers specifici per il Pitch Morphing e Binaural Control
   private activeDroneOscillators: { left: OscillatorNode, right: OscillatorNode, baseIndex: number }[] = [];
   private activePadOscillators: { osc: OscillatorNode, baseIndex: number }[] = [];
 
+  // Texture e Noise
   private noiseNode: AudioBufferSourceNode | null = null;
   private textureFilter: BiquadFilterNode | null = null;
-  private textureLFO: OscillatorNode | null = null; // LFO specifico per la texture
+  private textureLFO: OscillatorNode | null = null; // LFO specifico per la sintesi fisica (es. crackle fuoco)
   private textureGain: GainNode | null = null;
+
+  // ISOCHRONIC PULSE (Nuovo Layer)
+  // Modula il volume della texture per creare un battimento udibile anche senza cuffie
+  private isochronicLFO: OscillatorNode | null = null;
+  private isochronicGain: GainNode | null = null;
 
   // Stato
   private isPlaying: boolean = false;
@@ -32,49 +38,50 @@ class AudioEngine {
   // Parametri Manuali
   private chimeDensity: number = 1.0; 
   private currentElement: string = 'EARTH';
-  private currentMode: AudioMode = 'MEDITATION'; // Default mode
+  private currentMode: AudioMode = 'MEDITATION'; 
 
   // Algorithmic Walker State
-  private lastNoteIndex: number = 5; // Indice di partenza (centro scala)
+  private lastNoteIndex: number = 5; 
 
-  // --- TUNING DRONE PER ELEMENTO (Hertz) ---
-  // Ogni elemento ha una fondamentale diversa per cambiare il "colore" armonico
+  // --- TUNING DRONE PER ELEMENTO (Hertz) - A=432Hz BASE ---
+  // Frequenze abbassate per effetto "cranial massage" ma udibili
+  // Earth A1 (54Hz), Water D2 (72Hz), Fire C2 (64Hz), Wind F2 (85Hz), Ether B1 (60Hz)
   private droneTunings: Record<string, number[]> = {
-      'EARTH': [55.00, 82.41], // A1, E2 (Quinta giusta, stabile)
-      'WATER': [73.42, 110.00], // D2, A2 (Profondo, fluido)
-      'FIRE': [65.41, 98.00],   // C2, G2 (Caldo, energetico)
-      'WIND': [87.31, 130.81],  // F2, C3 (Aereo, Lidio)
-      'ETHER': [61.74, 92.50],  // B1, F#2 (Mistico, Locrio)
+      'EARTH': [54.00, 81.00], // A1 (432Hz base)
+      'WATER': [72.08, 108.00], // D2
+      'FIRE': [64.22, 96.33],   // C2
+      'WIND': [85.72, 128.58],  // F2
+      'ETHER': [60.61, 90.91],  // B1
   };
 
-  // --- SCALE MODALI (Hertz) ---
-  // Ogni elemento ha una "firma emotiva" musicale distinta
+  // --- SCALE MODALI (Hertz) - A=432Hz BASE ---
+  // Ricalcolate con rapporto 0.9818 rispetto allo standard 440Hz
   private scales: Record<string, number[]> = {
-      'EARTH': [ // A Minor Pentatonic (Radicamento, Stabilità, Antico)
-          110.00, 130.81, 146.83, 164.81, 196.00, 
-          220.00, 261.63, 293.66, 329.63, 392.00, 
-          440.00, 523.25, 587.33, 659.25, 783.99,
-          880.00
+      'EARTH': [ // A Minor Pentatonic (432Hz)
+          108.00, 128.43, 144.16, 161.82, 192.43, 
+          216.00, 256.87, 288.33, 323.63, 384.87, 
+          432.00, 513.74, 576.65, 647.27, 769.74,
+          864.00
       ],
-      'FIRE': [ // C Lydian (Luminoso, Magico, Ascendente) - Do, Re, Mi, Fa#, Sol, La, Si
-          130.81, 146.83, 164.81, 185.00, 196.00, 220.00, 246.94,
-          261.63, 293.66, 329.63, 369.99, 392.00, 440.00, 493.88,
-          523.25, 587.33, 659.25, 739.99
+      'FIRE': [ // C Lydian (432Hz)
+          128.43, 144.16, 161.82, 181.63, 192.43, 216.00, 242.45,
+          256.87, 288.33, 323.63, 363.27, 384.87, 432.00, 484.90,
+          513.74, 576.65, 647.27, 726.54
       ],
-      'WATER': [ // D Hirajoshi (Giapponese, Malinconico, Fluido)
-          73.42, 82.41, 110.00, 116.54, 146.83,
-          146.83, 164.81, 220.00, 233.08, 293.66,
-          293.66, 329.63, 440.00, 466.16, 587.33
+      'WATER': [ // D Hirajoshi (432Hz)
+          72.08, 81.00, 108.00, 114.42, 144.16,
+          144.16, 161.82, 216.00, 228.84, 288.33,
+          288.33, 323.63, 432.00, 457.69, 576.65
       ],
-      'WIND': [ // F Lydian/Whole Tone mix (Sospeso, Onirico, Senza gravità)
-          87.31, 110.00, 130.81, 146.83, 174.61, 196.00,
-          174.61, 220.00, 261.63, 293.66, 349.23, 392.00,
-          349.23, 440.00, 523.25, 587.33, 698.46
+      'WIND': [ // F Lydian/Whole Tone (432Hz)
+          85.72, 108.00, 128.43, 144.16, 171.44, 192.43,
+          171.44, 216.00, 256.87, 288.33, 342.88, 384.87,
+          342.88, 432.00, 513.74, 576.65, 685.76
       ],
-      'ETHER': [ // B Locrian/Just Intonation (Pitagorico, Armonia Matematica Pura)
-          61.74, 73.42, 87.31, 98.00, 123.47, 146.83,
-          123.47, 146.83, 174.61, 196.00, 246.94, 293.66,
-          246.94, 293.66, 349.23, 392.00, 493.88, 587.33
+      'ETHER': [ // B Locrian/Pitagorico (432Hz)
+          60.61, 72.08, 85.72, 96.33, 121.23, 144.16,
+          121.23, 144.16, 171.44, 192.43, 242.45, 288.33,
+          242.45, 288.33, 342.88, 384.87, 484.90, 576.65
       ]
   };
 
@@ -117,7 +124,6 @@ class AudioEngine {
 
   public setMode(mode: AudioMode) {
       this.currentMode = mode;
-      // Forza l'aggiornamento immediato della texture per applicare i nuovi volumi
       if (this.isPlaying) {
           this.updateTexture(this.currentElement);
       }
@@ -135,19 +141,14 @@ class AudioEngine {
   }
 
   public setAtmosphere(element: string) {
-      // Se l'elemento è lo stesso, non fare nulla (evita reset inutili)
       if (this.currentElement === element) return;
 
       this.currentElement = element;
       this.updateTexture(element);
-      this.morphDronePitch(element); // Cambia intonazione drone
+      this.morphDronePitch(element); 
       
-      // RESET MELODICO & FEEDBACK ISTANTANEO
-      // Quando cambi elemento, resetta l'indice melodico al centro per evitare salti fuori scala
       this.lastNoteIndex = 5;
       
-      // Suona immediatamente un chime per dare feedback all'utente (solo se in meditazione)
-      // In modalità Oracolo evitiamo feedback bruschi
       if (this.currentMode === 'MEDITATION') {
           if (this.chimeTimer) clearTimeout(this.chimeTimer);
           this.playRandomChime();
@@ -202,22 +203,18 @@ class AudioEngine {
       if (!this.context || !this.isPlaying || !this.reverbNode || !this.compressor) return;
       const t = this.context.currentTime;
       
-      // 1. Selezione Scala
       const currentScale = this.scales[this.currentElement] || this.scales['EARTH'];
       
-      // 2. Walker Logic (Movimento melodico coerente)
       const maxStep = 2;
       const step = Math.floor(Math.random() * (maxStep * 2 + 1)) - maxStep; 
       let nextIndex = this.lastNoteIndex + step;
       
-      // Rimbalzo ai bordi della scala
       if (nextIndex < 0) nextIndex = 1;
       if (nextIndex >= currentScale.length) nextIndex = currentScale.length - 2;
       
       this.lastNoteIndex = nextIndex;
       const freq = currentScale[nextIndex];
 
-      // 3. Sintesi Materica (TIMBRE MAPPING SPECIFICO PER ELEMENTO)
       let material = 'GLASS';
       const r = Math.random();
       
@@ -247,17 +244,15 @@ class AudioEngine {
               material = ['GLASS', 'WOOD', 'METAL'][Math.floor(r * 3)];
       }
 
-      // Boost volume texture
       const panner = this.context.createStereoPanner();
       panner.pan.value = this.randomRange(-0.4, 0.4);
       
-      // --- MODE MODIFIERS (ORACLE vs MEDITATION) ---
       let velocity = this.randomRange(0.7, 1.2); 
       let dryMix = 0.3;
 
       if (this.currentMode === 'ORACLE') {
-          velocity *= 0.4; // Molto più soft in modalità Oracolo
-          dryMix = 0.15; // Più lontano/riverberato, meno presenza
+          velocity *= 0.4; 
+          dryMix = 0.15; 
       }
 
       const gain = this.context.createGain();
@@ -271,7 +266,7 @@ class AudioEngine {
           dryGain.connect(this.compressor); 
       }
 
-      // SINTESI STRUMENTI (Identica a prima, ma pilotata da velocity modificata)
+      // SINTESI STRUMENTI
       if (material === 'GLASS') {
           const osc = this.context.createOscillator();
           osc.type = 'sine';
@@ -370,14 +365,12 @@ class AudioEngine {
           osc2.stop(t + decay);
       }
 
-      // Prossimo chime
-      // In modalità Oracolo i tempi sono molto dilatati (più rari)
       let densityMultiplier = this.chimeDensity;
       let extraDelay = 0;
       
       if (this.currentMode === 'ORACLE') {
-          densityMultiplier = 0.5; // Ignora slider density utente, forza bassa densità
-          extraDelay = 10000; // Aggiunge 10 secondi extra di silenzio tra un rintocco e l'altro
+          densityMultiplier = 0.5; 
+          extraDelay = 10000; 
       }
 
       const baseMin = 1500 + extraDelay;
@@ -386,21 +379,24 @@ class AudioEngine {
       this.chimeTimer = setTimeout(() => this.playRandomChime(), nextInterval);
   }
 
-  // --- BINAURAL DRONE ENGINE ---
+  // --- BINAURAL DRONE ENGINE (DEEP DIVE PROTOCOL) ---
   public startDrone() {
     if (this.isPlaying || !this.context || !this.compressor || !this.reverbNode) return;
     if (this.context.state === 'suspended') this.context.resume();
 
     this.activeDroneOscillators = [];
     this.activePadOscillators = [];
+    const t = this.context.currentTime;
 
-    // Ottieni le frequenze base per l'elemento corrente
     const baseFreqs = this.droneTunings[this.currentElement] || this.droneTunings['EARTH'];
-
-    // 1. DRONE BINAURALE STEREO
-    // In modalità Oracle il drone è leggermente più basso
     const volMod = this.currentMode === 'ORACLE' ? 0.7 : 1.0;
     
+    // PROTOCOLLO DI INDUZIONE (Ramp-Down)
+    // Start: 12Hz (Alpha) -> End: 4Hz (Theta) over 60 seconds
+    const startBinaural = 12;
+    const endBinaural = 4;
+    const rampDuration = 60; 
+
     const droneLevels = [
         { freqIdx: 0, vol: 0.15 * volMod }, 
         { freqIdx: 1, vol: 0.10 * volMod }
@@ -411,7 +407,7 @@ class AudioEngine {
 
         const baseFreq = baseFreqs[d.freqIdx];
 
-        // LEFT EAR
+        // LEFT EAR (Base)
         const oscL = this.context.createOscillator();
         oscL.type = 'sine';
         oscL.frequency.value = baseFreq;
@@ -420,10 +416,14 @@ class AudioEngine {
         const gainL = this.context.createGain();
         gainL.gain.value = d.vol;
 
-        // RIGHT EAR
+        // RIGHT EAR (Base + Binaural Offset)
         const oscR = this.context.createOscillator();
         oscR.type = 'sine';
-        oscR.frequency.value = baseFreq + 4; 
+        
+        // Applica Rampa di Induzione
+        oscR.frequency.setValueAtTime(baseFreq + startBinaural, t);
+        oscR.frequency.linearRampToValueAtTime(baseFreq + endBinaural, t + rampDuration);
+
         const panR = this.context.createStereoPanner();
         panR.pan.value = 1; 
         const gainR = this.context.createGain();
@@ -437,8 +437,8 @@ class AudioEngine {
         gainR.connect(panR);
         panR.connect(this.compressor!);
 
-        oscL.start();
-        oscR.start();
+        oscL.start(t);
+        oscR.start(t);
 
         this.oscillators.push(oscL, oscR);
         this.activeDroneOscillators.push({
@@ -451,12 +451,26 @@ class AudioEngine {
     // 2. PAD ETEREO
     this.createPadLayer();
 
-    // 3. TEXTURE FISICA (Noise Synthesis)
+    // 3. TEXTURE FISICA + ISOCHRONIC PULSE
     this.noiseNode = this.createBrownNoise();
     if (this.noiseNode && this.reverbNode) {
         this.textureGain = this.context.createGain();
-        this.textureGain.gain.value = 0.0; // Inizializza a zero, updateTexture settarà il valore corretto
+        this.textureGain.gain.value = 0.0; 
         
+        // Setup Isochronic Modulation Chain
+        // LFO -> IsoGain -> TextureGain.gain
+        this.isochronicLFO = this.context.createOscillator();
+        this.isochronicLFO.type = 'sine';
+        // Sincronizza LFO con la frequenza binaurale (Rampa)
+        this.isochronicLFO.frequency.setValueAtTime(startBinaural, t);
+        this.isochronicLFO.frequency.linearRampToValueAtTime(endBinaural, t + rampDuration);
+
+        this.isochronicGain = this.context.createGain();
+        this.isochronicGain.gain.value = 0.2; // Modulazione sottile (20%)
+
+        this.isochronicLFO.connect(this.isochronicGain);
+        // Nota: Connettiamo l'isochronic gain al texture gain DOPO aver settato il valore base in updateTexture
+
         this.textureFilter = this.context.createBiquadFilter();
         this.textureFilter.type = 'lowpass';
         this.textureFilter.frequency.value = 200; 
@@ -465,14 +479,14 @@ class AudioEngine {
         this.textureFilter.connect(this.textureGain);
         this.textureGain.connect(this.reverbNode);
         
-        this.noiseNode.start();
+        this.noiseNode.start(t);
+        this.isochronicLFO.start(t);
     }
 
     this.isPlaying = true;
     this.fadeIn();
-    this.updateTexture(this.currentElement); // Applica volumi corretti basati sul mode
+    this.updateTexture(this.currentElement);
     
-    // Start chiming
     this.chimeTimer = setTimeout(() => this.playRandomChime(), 2000);
   }
 
@@ -482,12 +496,14 @@ class AudioEngine {
       const targetFreqs = this.droneTunings[element] || this.droneTunings['EARTH'];
       const t = this.context.currentTime;
       const duration = 2.0; 
+      const binauralTarget = 4; // Target fisso a 4Hz post-induzione
 
       this.activeDroneOscillators.forEach(d => {
           if (targetFreqs[d.baseIndex]) {
               const target = targetFreqs[d.baseIndex];
               d.left.frequency.exponentialRampToValueAtTime(target, t + duration);
-              d.right.frequency.exponentialRampToValueAtTime(target + 4, t + duration); 
+              // Mantiene il binaural beat a 4Hz durante il cambio
+              d.right.frequency.exponentialRampToValueAtTime(target + binauralTarget, t + duration); 
           }
       });
 
@@ -495,7 +511,6 @@ class AudioEngine {
          const base = targetFreqs[0];
          let target = base * 2; 
          if (p.baseIndex === 1) target = base * 3; 
-         
          p.osc.frequency.exponentialRampToValueAtTime(target, t + duration);
       });
   }
@@ -506,7 +521,6 @@ class AudioEngine {
       const baseFreqs = this.droneTunings[this.currentElement] || this.droneTunings['EARTH'];
       const padNotes = [baseFreqs[0] * 2, baseFreqs[0] * 3]; 
       
-      // In modalità Oracle il Pad è più basso
       const volMod = this.currentMode === 'ORACLE' ? 0.015 : 0.03;
 
       padNotes.forEach((freq, idx) => {
@@ -540,15 +554,12 @@ class AudioEngine {
       });
   }
 
-  // --- SINTESI FISICA DEGLI ELEMENTI (Update in Realtime) ---
+  // --- SINTESI FISICA DEGLI ELEMENTI ---
   public updateTexture(element: string) {
       if (!this.context || !this.textureFilter || !this.textureGain) return;
 
       const t = this.context.currentTime;
       const duration = 1.0; 
-
-      // CALCOLO VOLUME TEXTURE BASATO SUL MODE
-      // In modalità ORACLE la texture fisica (rumore acqua/fuoco) è quasi spenta (20-25% del normale)
       const modeMultiplier = this.currentMode === 'ORACLE' ? 0.25 : 1.0;
 
       let targetGain = 0.08;
@@ -635,8 +646,14 @@ class AudioEngine {
               break;
       }
       
-      // Applica il volume finale scalato per il Mode
       this.textureGain.gain.setTargetAtTime(targetGain * modeMultiplier, t, 0.5);
+
+      // Connetti L'Isochronic LFO al gain della texture per la modulazione ritmica
+      if (this.isochronicGain) {
+          // Disconnetti prima per evitare connessioni multiple se updateTexture viene chiamato spesso
+          try { this.isochronicGain.disconnect(); } catch(e) {} 
+          this.isochronicGain.connect(this.textureGain.gain);
+      }
   }
 
   private fadeIn() {
@@ -675,6 +692,7 @@ class AudioEngine {
         });
         if (this.textureLFO) try { this.textureLFO.stop(); } catch(e) {}
         if (this.noiseNode) try { this.noiseNode.stop(); } catch(e) {}
+        if (this.isochronicLFO) try { this.isochronicLFO.stop(); } catch(e) {}
         
         this.oscillators = [];
         this.activeDroneOscillators = [];
@@ -682,9 +700,10 @@ class AudioEngine {
         this.noiseNode = null;
         this.textureLFO = null;
         this.textureFilter = null;
+        this.isochronicLFO = null;
         this.isPlaying = false;
         this.chimeDensity = 1.0; 
-        this.currentMode = 'MEDITATION'; // Reset default
+        this.currentMode = 'MEDITATION'; 
     });
   }
 
